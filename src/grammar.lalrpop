@@ -1,0 +1,32 @@
+use crate::ast::expression::*;
+use crate::ast::statement::*;
+use crate::ast::program::*;
+
+use std::str::FromStr;
+
+grammar;
+
+pub program: Program = {
+    <stmts:statement*> => Program::new(stmts)
+}
+
+statement: Statement = {
+    <expr:expression> ";" => Statement::ExpressionStatement(expr),
+}
+
+expression: Expression = {
+    <l:literal> => Expression::Literal(l),
+}
+
+literal: Literal = {
+    <n:int> => Literal::Int(n),
+    <s:string> => Literal::String(s),
+}
+
+int: i32 = {
+    <n:r"-?[0-9]+"> => i32::from_str(n).unwrap()
+};
+
+string: String = {
+    <s:r#""[^"]*""#> => s[1..s.len() - 1].to_owned()
+};
