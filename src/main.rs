@@ -1,7 +1,5 @@
-use runtime::eval::{
-    self,
-    program::{eval_program, Value},
-};
+use ast::expression::Literal;
+use runtime::eval::program::eval_program;
 use std::{collections::HashMap, fs};
 
 #[macro_use]
@@ -12,6 +10,10 @@ lalrpop_util::lalrpop_mod!(pub grammar);
 mod ast;
 mod runtime;
 
+pub enum Value {
+    Literal(Literal),
+}
+
 fn main() {
     let mut env = HashMap::<String, Value>::new();
 
@@ -19,7 +21,7 @@ fn main() {
     let parser = grammar::programParser::new();
     let ast = parser.parse(&code).expect("unable to parse the grammar");
 
-    println!("{:#?}", ast);
+    // println!("{:#?}", ast);
 
     let result = eval_program(&mut env, ast);
 

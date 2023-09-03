@@ -12,6 +12,7 @@ pub program: Program = {
 
 statement: Statement = {
     <expr:expression> ";" => Statement::ExpressionStatement(expr),
+    <name:identifier> "=" <rhs:expression> ";" => Statement::AssignmentStatement(name, rhs)
 }
 
 expression: Expression = {
@@ -30,3 +31,7 @@ int: i32 = {
 string: String = {
     <s:r#""[^"]*""#> => s[1..s.len() - 1].to_owned()
 };
+
+identifier: String = {
+    <s:r"[a-zA-Z_][a-zA-Z_0-9]*"> => s.to_owned()
+}
