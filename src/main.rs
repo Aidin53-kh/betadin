@@ -1,6 +1,6 @@
 use ast::expression::Literal;
 use runtime::eval::program::eval_program;
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, f32::consts::PI, fs};
 
 #[macro_use]
 extern crate lalrpop_util;
@@ -41,6 +41,76 @@ fn ak_println(vs: Vec<Value>) -> Result<Value, String> {
     }
 }
 
+fn ak_add(vs: Vec<Value>) -> Result<Value, String> {
+    let first = vs.get(0).expect("the first argument is required");
+    let second = vs.get(1).expect("the second argument is required");
+
+    if let Value::Literal(first) = first {
+        if let Value::Literal(second) = second {
+            return Ok(Value::Literal((first.clone() + second.clone())?));
+        } else {
+            return Err(format!("the first argument most be a literal"));
+        }
+    } else {
+        return Err(format!("the first argument most be a literal"));
+    }
+}
+fn ak_div(vs: Vec<Value>) -> Result<Value, String> {
+    let first = vs.get(0).expect("the first argument is required");
+    let second = vs.get(1).expect("the second argument is required");
+
+    if let Value::Literal(first) = first {
+        if let Value::Literal(second) = second {
+            return Ok(Value::Literal((first.clone() / second.clone())?));
+        } else {
+            return Err(format!("the first argument most be a literal"));
+        }
+    } else {
+        return Err(format!("the first argument most be a literal"));
+    }
+}
+fn ak_sub(vs: Vec<Value>) -> Result<Value, String> {
+    let first = vs.get(0).expect("the first argument is required");
+    let second = vs.get(1).expect("the second argument is required");
+
+    if let Value::Literal(first) = first {
+        if let Value::Literal(second) = second {
+            return Ok(Value::Literal((first.clone() - second.clone())?));
+        } else {
+            return Err(format!("the first argument most be a literal"));
+        }
+    } else {
+        return Err(format!("the first argument most be a literal"));
+    }
+}
+fn ak_mul(vs: Vec<Value>) -> Result<Value, String> {
+    let first = vs.get(0).expect("the first argument is required");
+    let second = vs.get(1).expect("the second argument is required");
+
+    if let Value::Literal(first) = first {
+        if let Value::Literal(second) = second {
+            return Ok(Value::Literal((first.clone() * second.clone())?));
+        } else {
+            return Err(format!("the first argument most be a literal"));
+        }
+    } else {
+        return Err(format!("the first argument most be a literal"));
+    }
+}
+
+fn ak_cos(vs: Vec<Value>) -> Result<Value, String> {
+    let first = vs.get(0).expect("the first argument is required");
+
+    if let Value::Literal(first) = first {
+        match first {
+            Literal::Int(n) => return Ok(Value::Literal(Literal::Float((*n as f32).cos()))),
+            Literal::Float(n) => return Ok(Value::Literal(Literal::Float((*n).cos()))),
+            Literal::String(_) => return Err(format!("cosinus on string no suported")),
+        }
+    } else {
+        return Err(format!("invalid argument"));
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum Export {
@@ -61,7 +131,38 @@ fn main() -> Result<(), String> {
     env.insert(String::from("print"), Value::BuiltInFn(ak_print));
     env.insert(String::from("println"), Value::BuiltInFn(ak_println));
 
-    let modules: Vec<Export> = vec![];
+    let modules: Vec<Export> = vec![Export::Module {
+        name: String::from("std"),
+        exports: vec![Export::Module {
+            name: String::from("math"),
+            exports: vec![
+                Export::Item {
+                    name: String::from("add"),
+                    value: Value::BuiltInFn(ak_add),
+                },
+                Export::Item {
+                    name: String::from("mul"),
+                    value: Value::BuiltInFn(ak_mul),
+                },
+                Export::Item {
+                    name: String::from("div"),
+                    value: Value::BuiltInFn(ak_div),
+                },
+                Export::Item {
+                    name: String::from("sub"),
+                    value: Value::BuiltInFn(ak_sub),
+                },
+                Export::Item {
+                    name: String::from("cos"),
+                    value: Value::BuiltInFn(ak_cos),
+                },
+                Export::Item {
+                    name: String::from("PI"),
+                    value: Value::Literal(Literal::Float(PI)),
+                },
+            ],
+        }],
+    }];
 
     let code = fs::read_to_string("./examples/test.ak").expect("unable to read the file");
     let parser = grammar::programParser::new();

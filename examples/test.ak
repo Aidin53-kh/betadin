@@ -1,10 +1,8 @@
+use std::math::add;
+
 let x = 29;
+let y = 1;
 
-println(x);
+let r = add(x, y);
 
-let x = 39;
-
-use std::math::pi;
-use std::math::operators::plus;
-
-println(x);
+print(r);
