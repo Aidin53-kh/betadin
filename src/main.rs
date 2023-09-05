@@ -1,5 +1,6 @@
-use ast::expression::Literal;
 use runtime::eval::program::eval_program;
+use std::fmt::Display;
+use std::ops::{Add, Div, Mul, Sub};
 use std::{collections::HashMap, f32::consts::PI, fs};
 
 #[macro_use]
@@ -13,115 +14,223 @@ mod runtime;
 #[derive(Debug, Clone)]
 pub enum Value {
     Null,
-    Literal(Literal),
+    Int(i32),
+    Float(f32),
+    String(String),
     BuiltInFn(fn(Vec<Value>) -> Result<Value, String>),
 }
 
+impl Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Null => write!(f, "null"),
+            Value::Int(n) => write!(f, "{}", n),
+            Value::Float(n) => write!(f, "{}", n),
+            Value::String(s) => write!(f, "{}", s),
+            Value::BuiltInFn(_) => write!(f, "function"),
+        }
+    }
+}
+impl Add for &Value {
+    type Output = Result<Value, String>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        match self {
+            Value::Null => Err(format!("cannot add null with any thing")),
+            Value::Int(lhs) => match rhs {
+                Value::Null => Err(format!("cannot add int with null")),
+                Value::Int(rhs) => Ok(Value::Int(lhs + rhs)),
+                Value::Float(rhs) => Ok(Value::Float(*lhs as f32 + rhs)),
+                Value::String(rhs) => Ok(Value::String(lhs.to_string() + &rhs)),
+                Value::BuiltInFn(_) => return Err(format!("cannot int with function")),
+            },
+            Value::Float(lhs) => match rhs {
+                Value::Null => Err(format!("cannot add float with null")),
+                Value::Int(rhs) => Ok(Value::Float(lhs + *rhs as f32)),
+                Value::Float(rhs) => Ok(Value::Float(lhs + rhs)),
+                Value::String(rhs) => Ok(Value::String(lhs.to_string() + &rhs)),
+                Value::BuiltInFn(_) => return Err(format!("cannot float with function")),
+            },
+            Value::String(lhs) => match rhs {
+                Value::Null => Err(format!("cannot add string with null")),
+                Value::Int(rhs) => Ok(Value::String(lhs.to_owned() + &rhs.to_string().to_owned())),
+                Value::Float(rhs) => {
+                    Ok(Value::String(lhs.to_owned() + &rhs.to_string().to_owned()))
+                }
+                Value::String(rhs) => Ok(Value::String(lhs.to_owned() + rhs)),
+                Value::BuiltInFn(_) => return Err(format!("cannot string with function")),
+            },
+            Value::BuiltInFn(_) => return Err(format!("cannot add function with anything")),
+        }
+    }
+}
+impl Mul for &Value {
+    type Output = Result<Value, String>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        match self {
+            Value::Null => Err(format!("cannot mul null with any thing")),
+            Value::Int(lhs) => match rhs {
+                Value::Null => Err(format!("cannot mul int with null")),
+                Value::Int(rhs) => Ok(Value::Int(lhs * rhs)),
+                Value::Float(rhs) => Ok(Value::Float(*lhs as f32 * rhs)),
+                Value::String(_) => Err(format!("cannot mul int with string")),
+                Value::BuiltInFn(_) => Err(format!("cannot mul int with function")),
+            },
+            Value::Float(lhs) => match rhs {
+                Value::Null => Err(format!("cannot mul float with null")),
+                Value::Int(rhs) => Ok(Value::Float(lhs * *rhs as f32)),
+                Value::Float(rhs) => Ok(Value::Float(lhs * rhs)),
+                Value::String(_) => Err(format!("cannot mul float with string")),
+                Value::BuiltInFn(_) => return Err(format!("cannot nul float with function")),
+            },
+            Value::String(_) => match rhs {
+                Value::Null => Err(format!("cannot mul string with null")),
+                Value::Int(_) => Err(format!("cannot mul string with int")),
+                Value::Float(_) => Err(format!("cannot mul string with float")),
+                Value::String(_) => Err(format!("cannot mul string with string")),
+                Value::BuiltInFn(_) => return Err(format!("cannot mul string with function")),
+            },
+            Value::BuiltInFn(_) => return Err(format!("cannot mul function with anything")),
+        }
+    }
+}
+impl Div for &Value {
+    type Output = Result<Value, String>;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        match self {
+            Value::Null => Err(format!("cannot div null with any thing")),
+            Value::Int(lhs) => match rhs {
+                Value::Null => Err(format!("cannot div int with null")),
+                Value::Int(rhs) => Ok(Value::Int(lhs / rhs)),
+                Value::Float(rhs) => Ok(Value::Float(*lhs as f32 / rhs)),
+                Value::String(_) => Err(format!("cannot div int with string")),
+                Value::BuiltInFn(_) => Err(format!("cannot div int with function")),
+            },
+            Value::Float(lhs) => match rhs {
+                Value::Null => Err(format!("cannot div float with null")),
+                Value::Int(rhs) => Ok(Value::Float(lhs / *rhs as f32)),
+                Value::Float(rhs) => Ok(Value::Float(lhs / rhs)),
+                Value::String(_) => Err(format!("cannot div float with string")),
+                Value::BuiltInFn(_) => return Err(format!("cannot nul float with function")),
+            },
+            Value::String(_) => match rhs {
+                Value::Null => Err(format!("cannot div string with null")),
+                Value::Int(_) => Err(format!("cannot div string with int")),
+                Value::Float(_) => Err(format!("cannot div string with float")),
+                Value::String(_) => Err(format!("cannot div string with string")),
+                Value::BuiltInFn(_) => return Err(format!("cannot div string with function")),
+            },
+            Value::BuiltInFn(_) => return Err(format!("cannot div function with anything")),
+        }
+    }
+}
+impl Sub for &Value {
+    type Output = Result<Value, String>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        match self {
+            Value::Null => Err(format!("cannot sub null with any thing")),
+            Value::Int(lhs) => match rhs {
+                Value::Null => Err(format!("cannot sub int with null")),
+                Value::Int(rhs) => Ok(Value::Int(lhs / rhs)),
+                Value::Float(rhs) => Ok(Value::Float(*lhs as f32 / rhs)),
+                Value::String(_) => Err(format!("cannot sub int with string")),
+                Value::BuiltInFn(_) => Err(format!("cannot sub int with function")),
+            },
+            Value::Float(lhs) => match rhs {
+                Value::Null => Err(format!("cannot sub float with null")),
+                Value::Int(rhs) => Ok(Value::Float(lhs / *rhs as f32)),
+                Value::Float(rhs) => Ok(Value::Float(lhs / rhs)),
+                Value::String(_) => Err(format!("cannot sub float with string")),
+                Value::BuiltInFn(_) => return Err(format!("cannot nul float with function")),
+            },
+            Value::String(_) => match rhs {
+                Value::Null => Err(format!("cannot sub string with null")),
+                Value::Int(_) => Err(format!("cannot sub string with int")),
+                Value::Float(_) => Err(format!("cannot sub string with float")),
+                Value::String(_) => Err(format!("cannot sub string with string")),
+                Value::BuiltInFn(_) => return Err(format!("cannot sub string with function")),
+            },
+            Value::BuiltInFn(_) => return Err(format!("cannot sub function with anything")),
+        }
+    }
+}
 fn ak_print(vs: Vec<Value>) -> Result<Value, String> {
-    match &vs[0] {
-        Value::Literal(v) => {
-            print!("{}", v);
+    match vs.get(0) {
+        Some(value) => {
+            print!("{}", value);
             return Ok(Value::Null);
         }
-        _ => {
-            return Err(format!("unsupported arg"));
-        }
+        None => return Err(format!("the first argument is required")),
     }
 }
-
 fn ak_println(vs: Vec<Value>) -> Result<Value, String> {
-    match &vs[0] {
-        Value::Literal(v) => {
-            println!("{}", v);
+    match vs.get(0) {
+        Some(value) => {
+            println!("{}", value);
             return Ok(Value::Null);
         }
-        _ => {
-            return Err(format!("unsupported arg"));
-        }
+        None => return Err(format!("the first argument is required")),
     }
 }
-
 fn ak_add(vs: Vec<Value>) -> Result<Value, String> {
-    let first = vs.get(0).expect("the first argument is required");
-    let second = vs.get(1).expect("the second argument is required");
-
-    if let Value::Literal(first) = first {
-        if let Value::Literal(second) = second {
-            return Ok(Value::Literal((first.clone() + second.clone())?));
-        } else {
-            return Err(format!("the first argument most be a literal"));
-        }
-    } else {
-        return Err(format!("the first argument most be a literal"));
+    match vs.get(0) {
+        Some(value1) => match vs.get(1) {
+            Some(value2) => value1 + value2,
+            None => return Err(format!("the second argument is require")),
+        },
+        None => return Err(format!("the first argument is require")),
     }
 }
 fn ak_div(vs: Vec<Value>) -> Result<Value, String> {
-    let first = vs.get(0).expect("the first argument is required");
-    let second = vs.get(1).expect("the second argument is required");
-
-    if let Value::Literal(first) = first {
-        if let Value::Literal(second) = second {
-            return Ok(Value::Literal((first.clone() / second.clone())?));
-        } else {
-            return Err(format!("the first argument most be a literal"));
-        }
-    } else {
-        return Err(format!("the first argument most be a literal"));
+    match vs.get(0) {
+        Some(value1) => match vs.get(1) {
+            Some(value2) => value1 / value2,
+            None => return Err(format!("the second argument is require")),
+        },
+        None => return Err(format!("the first argument is require")),
     }
 }
 fn ak_sub(vs: Vec<Value>) -> Result<Value, String> {
-    let first = vs.get(0).expect("the first argument is required");
-    let second = vs.get(1).expect("the second argument is required");
-
-    if let Value::Literal(first) = first {
-        if let Value::Literal(second) = second {
-            return Ok(Value::Literal((first.clone() - second.clone())?));
-        } else {
-            return Err(format!("the first argument most be a literal"));
-        }
-    } else {
-        return Err(format!("the first argument most be a literal"));
+    match vs.get(0) {
+        Some(value1) => match vs.get(1) {
+            Some(value2) => value1 - value2,
+            None => return Err(format!("the second argument is require")),
+        },
+        None => return Err(format!("the first argument is require")),
     }
 }
 fn ak_mul(vs: Vec<Value>) -> Result<Value, String> {
-    let first = vs.get(0).expect("the first argument is required");
-    let second = vs.get(1).expect("the second argument is required");
-
-    if let Value::Literal(first) = first {
-        if let Value::Literal(second) = second {
-            return Ok(Value::Literal((first.clone() * second.clone())?));
-        } else {
-            return Err(format!("the first argument most be a literal"));
-        }
-    } else {
-        return Err(format!("the first argument most be a literal"));
+    match vs.get(0) {
+        Some(value1) => match vs.get(1) {
+            Some(value2) => value1 * value2,
+            None => return Err(format!("the second argument is require")),
+        },
+        None => return Err(format!("the first argument is require")),
     }
 }
-
 fn ak_cos(vs: Vec<Value>) -> Result<Value, String> {
-    let first = vs.get(0).expect("the first argument is required");
-
-    if let Value::Literal(first) = first {
-        match first {
-            Literal::Int(n) => return Ok(Value::Literal(Literal::Float((*n as f32).cos()))),
-            Literal::Float(n) => return Ok(Value::Literal(Literal::Float((*n).cos()))),
-            Literal::String(_) => return Err(format!("cosinus on string no suported")),
-        }
-    } else {
-        return Err(format!("invalid argument"));
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::Int(n) => return Ok(Value::Float((*n as f32).cos())),
+            Value::Float(n) => return Ok(Value::Float(n.cos())),
+            _ => return Err(format!("the first argument most be a number")),
+        },
+        None => Err(format!("the first argument is required")),
     }
 }
-
 fn ak_len(vs: Vec<Value>) -> Result<Value, String> {
-    let first = vs.get(0).expect("the first argument is required");
-
-    if let Value::Literal(l) = first {
-        match l {
-            Literal::String(s) => return Ok(Value::Literal(Literal::Int(s.len() as i32))),
-            _ => return Err(format!("the first argument most be string")),
+    match vs.get(0) {
+        Some(value) => {
+            if let Value::String(s) = value {
+                return Ok(Value::Int(s.len() as i32));
+            } else {
+                return Err(format!("the first argument most be string"));
+            }
         }
-    } else {
-        return Err(format!("the first argument most be string"));
+        None => Err(format!("the first argument is required")),
     }
 }
 
@@ -154,7 +263,7 @@ fn main() -> Result<(), String> {
                         name: String::from("consts"),
                         exports: vec![Export::Item {
                             name: String::from("PI"),
-                            value: Value::Literal(Literal::Float(PI)),
+                            value: Value::Float(PI),
                         }],
                     },
                     Export::Item {

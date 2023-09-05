@@ -1,4 +1,5 @@
 use std::math;
-use std::math::consts;
+use std::string::len;
 
-println(add("x is: ", 4));
+println(len("aidin53"));
+println(add(3,56));

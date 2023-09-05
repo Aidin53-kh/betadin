@@ -1,15 +1,22 @@
 use std::collections::HashMap;
 
-
-use crate::{ast::expression::Expression, Value};
+use crate::{
+    ast::expression::{Expression, Literal},
+    Value,
+};
 
 pub fn eval_expression(
     env: &mut HashMap<String, Value>,
     expression: Expression,
 ) -> Result<Value, String> {
-    
     match expression {
-        Expression::Literal(v) => Ok(Value::Literal(v)),
+        Expression::Literal(v) => {
+            return match v {
+                Literal::Int(n) => Ok(Value::Int(n)),
+                Literal::Float(n) => Ok(Value::Float(n)),
+                Literal::String(s) => Ok(Value::String(s)),
+            }
+        }
         Expression::Call(name, args) => {
             let env_clone = env.clone();
             let f = env_clone
