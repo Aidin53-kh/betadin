@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use crate::{ast::program::Program, Export, Value};
+use crate::ast::program::Program;
+use crate::{Export, Value};
 
 use super::statement::eval_statement;
 

@@ -15,6 +15,17 @@ pub fn eval_expression(
                 Literal::Int(n) => Ok(Value::Int(n)),
                 Literal::Float(n) => Ok(Value::Float(n)),
                 Literal::String(s) => Ok(Value::String(s)),
+                Literal::List(list) => {
+                    let mut values: Vec<Value> = Vec::new();
+
+                    for expr in list {
+                        let value = eval_expression(env, expr)?;
+
+                        values.push(value);
+                    }
+
+                    Ok(Value::List(values))
+                }
             }
         }
         Expression::Call(name, args) => {

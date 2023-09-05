@@ -39,6 +39,7 @@ args: Vec<Expression> = {
 literal: Literal = {
     <n:int> => Literal::Int(n),
     <s:string> => Literal::String(s),
+    <l:list> => Literal::List(l)
 }
 
 int: i32 = {
@@ -48,6 +49,10 @@ int: i32 = {
 string: String = {
     <s:r#""[^"]*""#> => s[1..s.len() - 1].to_owned()
 };
+
+list: Vec<Expression> = {
+    "[" <head:args> "]" => head,
+}
 
 identifier: String = {
     <s:r"[a-zA-Z_][a-zA-Z_0-9]*"> => s.to_owned()

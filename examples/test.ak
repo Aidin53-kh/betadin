@@ -1,5 +1,7 @@
 use std::math;
-use std::string::len;
 
-println(len("aidin53"));
-println(add(3,56));
+let t = 39;
+let f = [67,5,5,"aidin53",t, add(5,7)];
+
+println(f);
+

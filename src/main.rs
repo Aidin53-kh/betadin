@@ -1,5 +1,5 @@
 use runtime::eval::program::eval_program;
-use std::fmt::Display;
+use std::fmt::{write, Display};
 use std::ops::{Add, Div, Mul, Sub};
 use std::{collections::HashMap, f32::consts::PI, fs};
 
@@ -17,7 +17,22 @@ pub enum Value {
     Int(i32),
     Float(f32),
     String(String),
+    List(Vec<Value>),
     BuiltInFn(fn(Vec<Value>) -> Result<Value, String>),
+}
+
+fn value_list(values: Vec<Value>) -> String {
+    let mut res: String = String::new();
+
+    for (i, value) in values.iter().enumerate() {
+        if i != 0 {
+            res.push_str(", ");
+        }
+
+        res.push_str(&value.to_string());
+    }
+
+    res
 }
 
 impl Display for Value {
@@ -28,6 +43,7 @@ impl Display for Value {
             Value::Float(n) => write!(f, "{}", n),
             Value::String(s) => write!(f, "{}", s),
             Value::BuiltInFn(_) => write!(f, "function"),
+            Value::List(v) => write!(f, "[{}]", value_list(v.to_vec())),
         }
     }
 }
@@ -43,6 +59,7 @@ impl Add for &Value {
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 + rhs)),
                 Value::String(rhs) => Ok(Value::String(lhs.to_string() + &rhs)),
                 Value::BuiltInFn(_) => return Err(format!("cannot int with function")),
+                Value::List(_) => todo!(),
             },
             Value::Float(lhs) => match rhs {
                 Value::Null => Err(format!("cannot add float with null")),
@@ -50,6 +67,7 @@ impl Add for &Value {
                 Value::Float(rhs) => Ok(Value::Float(lhs + rhs)),
                 Value::String(rhs) => Ok(Value::String(lhs.to_string() + &rhs)),
                 Value::BuiltInFn(_) => return Err(format!("cannot float with function")),
+                Value::List(_) => todo!(),
             },
             Value::String(lhs) => match rhs {
                 Value::Null => Err(format!("cannot add string with null")),
@@ -59,8 +77,10 @@ impl Add for &Value {
                 }
                 Value::String(rhs) => Ok(Value::String(lhs.to_owned() + rhs)),
                 Value::BuiltInFn(_) => return Err(format!("cannot string with function")),
+                Value::List(_) => todo!(),
             },
             Value::BuiltInFn(_) => return Err(format!("cannot add function with anything")),
+            Value::List(_) => todo!(),
         }
     }
 }
@@ -76,6 +96,7 @@ impl Mul for &Value {
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 * rhs)),
                 Value::String(_) => Err(format!("cannot mul int with string")),
                 Value::BuiltInFn(_) => Err(format!("cannot mul int with function")),
+                Value::List(_) => todo!(),
             },
             Value::Float(lhs) => match rhs {
                 Value::Null => Err(format!("cannot mul float with null")),
@@ -83,6 +104,7 @@ impl Mul for &Value {
                 Value::Float(rhs) => Ok(Value::Float(lhs * rhs)),
                 Value::String(_) => Err(format!("cannot mul float with string")),
                 Value::BuiltInFn(_) => return Err(format!("cannot nul float with function")),
+                Value::List(_) => todo!(),
             },
             Value::String(_) => match rhs {
                 Value::Null => Err(format!("cannot mul string with null")),
@@ -90,8 +112,10 @@ impl Mul for &Value {
                 Value::Float(_) => Err(format!("cannot mul string with float")),
                 Value::String(_) => Err(format!("cannot mul string with string")),
                 Value::BuiltInFn(_) => return Err(format!("cannot mul string with function")),
+                Value::List(_) => todo!(),
             },
             Value::BuiltInFn(_) => return Err(format!("cannot mul function with anything")),
+            Value::List(_) => todo!(),
         }
     }
 }
@@ -107,6 +131,7 @@ impl Div for &Value {
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 / rhs)),
                 Value::String(_) => Err(format!("cannot div int with string")),
                 Value::BuiltInFn(_) => Err(format!("cannot div int with function")),
+                Value::List(_) => todo!(),
             },
             Value::Float(lhs) => match rhs {
                 Value::Null => Err(format!("cannot div float with null")),
@@ -114,6 +139,7 @@ impl Div for &Value {
                 Value::Float(rhs) => Ok(Value::Float(lhs / rhs)),
                 Value::String(_) => Err(format!("cannot div float with string")),
                 Value::BuiltInFn(_) => return Err(format!("cannot nul float with function")),
+                Value::List(_) => todo!(),
             },
             Value::String(_) => match rhs {
                 Value::Null => Err(format!("cannot div string with null")),
@@ -121,8 +147,10 @@ impl Div for &Value {
                 Value::Float(_) => Err(format!("cannot div string with float")),
                 Value::String(_) => Err(format!("cannot div string with string")),
                 Value::BuiltInFn(_) => return Err(format!("cannot div string with function")),
+                Value::List(_) => todo!(),
             },
             Value::BuiltInFn(_) => return Err(format!("cannot div function with anything")),
+            Value::List(_) => todo!(),
         }
     }
 }
@@ -138,6 +166,7 @@ impl Sub for &Value {
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 / rhs)),
                 Value::String(_) => Err(format!("cannot sub int with string")),
                 Value::BuiltInFn(_) => Err(format!("cannot sub int with function")),
+                Value::List(_) => todo!(),
             },
             Value::Float(lhs) => match rhs {
                 Value::Null => Err(format!("cannot sub float with null")),
@@ -145,6 +174,7 @@ impl Sub for &Value {
                 Value::Float(rhs) => Ok(Value::Float(lhs / rhs)),
                 Value::String(_) => Err(format!("cannot sub float with string")),
                 Value::BuiltInFn(_) => return Err(format!("cannot nul float with function")),
+                Value::List(_) => todo!(),
             },
             Value::String(_) => match rhs {
                 Value::Null => Err(format!("cannot sub string with null")),
@@ -152,8 +182,10 @@ impl Sub for &Value {
                 Value::Float(_) => Err(format!("cannot sub string with float")),
                 Value::String(_) => Err(format!("cannot sub string with string")),
                 Value::BuiltInFn(_) => return Err(format!("cannot sub string with function")),
+                Value::List(_) => todo!(),
             },
             Value::BuiltInFn(_) => return Err(format!("cannot sub function with anything")),
+            Value::List(_) => todo!(),
         }
     }
 }
