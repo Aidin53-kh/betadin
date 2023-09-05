@@ -15,9 +15,13 @@ pub fn eval_statement(
             return Ok(());
         }
         Statement::LetStatement(name, rhs) => {
-            let value = eval_expression(env, rhs)?;
-            env.insert(name, value);
-            return Ok(());
+            if let Some(_) = env.get(&name) {
+                return Err(format!("Duplicate variable {}", name));
+            } else {
+                let value = eval_expression(env, rhs)?;
+                env.insert(name, value);
+                return Ok(());
+            }
         }
         Statement::ImportStatement(args) => {
             apply_imports(env, modules, args)?;
