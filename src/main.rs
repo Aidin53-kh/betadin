@@ -112,6 +112,19 @@ fn ak_cos(vs: Vec<Value>) -> Result<Value, String> {
     }
 }
 
+fn ak_len(vs: Vec<Value>) -> Result<Value, String> {
+    let first = vs.get(0).expect("the first argument is required");
+
+    if let Value::Literal(l) = first {
+        match l {
+            Literal::String(s) => return Ok(Value::Literal(Literal::Int(s.len() as i32))),
+            _ => return Err(format!("the first argument most be string")),
+        }
+    } else {
+        return Err(format!("the first argument most be string"));
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Export {
     Module { name: String, exports: Vec<Export> },
@@ -133,35 +146,47 @@ fn main() -> Result<(), String> {
 
     let modules: Vec<Export> = vec![Export::Module {
         name: String::from("std"),
-        exports: vec![Export::Module {
-            name: String::from("math"),
-            exports: vec![
-                Export::Item {
-                    name: String::from("add"),
-                    value: Value::BuiltInFn(ak_add),
-                },
-                Export::Item {
-                    name: String::from("mul"),
-                    value: Value::BuiltInFn(ak_mul),
-                },
-                Export::Item {
-                    name: String::from("div"),
-                    value: Value::BuiltInFn(ak_div),
-                },
-                Export::Item {
-                    name: String::from("sub"),
-                    value: Value::BuiltInFn(ak_sub),
-                },
-                Export::Item {
-                    name: String::from("cos"),
-                    value: Value::BuiltInFn(ak_cos),
-                },
-                Export::Item {
-                    name: String::from("PI"),
-                    value: Value::Literal(Literal::Float(PI)),
-                },
-            ],
-        }],
+        exports: vec![
+            Export::Module {
+                name: String::from("math"),
+                exports: vec![
+                    Export::Module {
+                        name: String::from("consts"),
+                        exports: vec![Export::Item {
+                            name: String::from("PI"),
+                            value: Value::Literal(Literal::Float(PI)),
+                        }],
+                    },
+                    Export::Item {
+                        name: String::from("add"),
+                        value: Value::BuiltInFn(ak_add),
+                    },
+                    Export::Item {
+                        name: String::from("mul"),
+                        value: Value::BuiltInFn(ak_mul),
+                    },
+                    Export::Item {
+                        name: String::from("div"),
+                        value: Value::BuiltInFn(ak_div),
+                    },
+                    Export::Item {
+                        name: String::from("sub"),
+                        value: Value::BuiltInFn(ak_sub),
+                    },
+                    Export::Item {
+                        name: String::from("cos"),
+                        value: Value::BuiltInFn(ak_cos),
+                    },
+                ],
+            },
+            Export::Module {
+                name: String::from("string"),
+                exports: vec![Export::Item {
+                    name: String::from("len"),
+                    value: Value::BuiltInFn(ak_len),
+                }],
+            },
+        ],
     }];
 
     let code = fs::read_to_string("./examples/test.ak").expect("unable to read the file");

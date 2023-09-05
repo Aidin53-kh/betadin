@@ -1,8 +1,4 @@
-use std::math::add;
+use std::math;
+use std::math::consts;
 
-let x = 29;
-let y = 1;
-
-let r = add(x, y);
-
-print(r);
+println(add("x is: ", 4));
