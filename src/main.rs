@@ -397,6 +397,10 @@ fn main() -> Result<(), String> {
                     value: Value::BuiltInFn(ak_len),
                 }],
             },
+            Export::Module {
+                name: String::from("collections"),
+                exports: vec![],
+            },
         ],
     }];
 
