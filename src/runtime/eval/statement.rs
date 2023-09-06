@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use super::expression::eval_expression;
 use crate::ast::statement::Statement;
-use crate::{Export, Value};
+use crate::runtime::value::Value;
+use crate::Export;
 
 pub fn eval_statement(
     env: &mut HashMap<String, Value>,

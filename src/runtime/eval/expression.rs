@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
-use crate::{
-    ast::expression::{Expression, Literal},
-    Value,
-};
+use crate::ast::expression::{Expression, Literal};
+use crate::runtime::value::Value;
 
 pub fn eval_expression(
     env: &mut HashMap<String, Value>,
