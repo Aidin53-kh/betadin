@@ -22,6 +22,11 @@ fn main() -> Result<(), String> {
     let code = fs::read_to_string("./examples/test.ak").expect("unable to read the file");
     let parser = grammar::programParser::new();
     let ast = parser.parse(&code).expect("unable to parse the grammar");
-
-    eval_program(&mut Env::new(), ast, runtime::std::modules())
+    // println!("{:#?}", ast);
+    eval_program(
+        &mut Env::new(),
+        ast,
+        runtime::std::modules(),
+        runtime::std::prototypes(),
+    )
 }

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::expression::eval_expression;
 use crate::ast::statement::Statement;
+use crate::runtime::std::Prototypes;
 use crate::runtime::value::Value;
 use crate::Export;
 
@@ -9,17 +10,18 @@ pub fn eval_statement(
     env: &mut HashMap<String, Value>,
     statement: Statement,
     modules: Vec<Export>,
+    prototypes: Prototypes
 ) -> Result<(), String> {
     match statement {
         Statement::ExpressionStatement(expr) => {
-            eval_expression(env, expr)?;
+            eval_expression(env, expr, prototypes)?;
             return Ok(());
         }
         Statement::LetStatement(name, rhs) => {
             if let Some(_) = env.get(&name) {
                 return Err(format!("Duplicate variable {}", name));
             } else {
-                let value = eval_expression(env, rhs)?;
+                let value = eval_expression(env, rhs, prototypes)?;
                 env.insert(name, value);
                 return Ok(());
             }
@@ -30,7 +32,7 @@ pub fn eval_statement(
         }
         Statement::AssignmentStatement(name, rhs) => {
             if let Some(_) = env.get(&name) {
-                let value = eval_expression(env, rhs)?;
+                let value = eval_expression(env, rhs, prototypes)?;
                 env.insert(name, value);
                 return Ok(());
             } else {

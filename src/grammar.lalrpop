@@ -25,7 +25,18 @@ import_args: Vec<String> = {
 }
 
 expr: Expression = {
+    <objects:expr> "." <tail:term_2>  => Expression::MethodCall(Box::new(objects), Box::new(tail)),
+    <head:term> => head,
+}
+
+term: Expression = {
     <l:literal> => Expression::Literal(l),
+    <name:identifier> "(" <args:args> ")" => Expression::Call(name, args),
+    <name:identifier> => Expression::Identifier(name),
+    "(" <head:term> ")" => head,
+}
+
+term_2: Expression = {
     <name:identifier> "(" <args:args> ")" => Expression::Call(name, args),
     <name:identifier> => Expression::Identifier(name),
 }

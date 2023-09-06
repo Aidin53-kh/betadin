@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 
 use crate::ast::expression::{Expression, Literal};
-use crate::runtime::value::Value;
+use crate::runtime::std::Prototypes;
+use crate::runtime::value::{Type, Value};
 
 pub fn eval_expression(
     env: &mut HashMap<String, Value>,
     expression: Expression,
+    prototypes: Prototypes,
 ) -> Result<Value, String> {
     match expression {
         Expression::Literal(v) => {
@@ -17,7 +19,7 @@ pub fn eval_expression(
                     let mut values: Vec<Value> = Vec::new();
 
                     for expr in list {
-                        let value = eval_expression(env, expr)?;
+                        let value = eval_expression(env, expr, prototypes.clone())?;
 
                         values.push(value);
                     }
@@ -37,14 +39,13 @@ pub fn eval_expression(
                     let mut values = vec![];
 
                     for arg in args {
-                        let val = eval_expression(env, arg)?;
+                        let val = eval_expression(env, arg, prototypes.clone())?;
                         values.push(val);
                     }
 
                     let value = f(values)?;
                     return Ok(value);
                 }
-
                 _ => {
                     return Err(format!("{} is not a function", name));
                 }
@@ -58,6 +59,46 @@ pub fn eval_expression(
             } else {
                 println!("variable {} is not defied", &name);
                 return Err(format!("variable {} is not defied", name));
+            }
+        }
+        Expression::MethodCall(object, calle) => {
+            let value = eval_expression(env, *object.clone(), prototypes.to_owned())?;
+
+            if let Expression::Call(name, args) = *calle {
+                match prototypes.get(&Type::from(&value)) {
+                    Some(map) => match map.get(&name) {
+                        Some(f) => {
+                            if let Value::BuiltInMethod(m) = f {
+                                let mut values = vec![];
+
+                                for arg in args {
+                                    let val = eval_expression(env, arg, prototypes.clone())?;
+                                    values.push(val);
+                                }
+                                let result = m(values, value)?;
+                                return Ok(result);
+                            } else {
+                                return Err(format!("only method call allowed"));
+                            }
+                        }
+                        None => {
+                            return Err(format!(
+                                "{} method is not exist in {:?} prototype",
+                                name,
+                                Type::from(&value)
+                            ))
+                        }
+                    },
+                    None => {
+                        return Err(format!(
+                            "{} method is not exist in {:?} prototype",
+                            name,
+                            Type::from(&value)
+                        ))
+                    }
+                }
+            } else {
+                Err(format!("only method call allowed"))
             }
         }
     }
