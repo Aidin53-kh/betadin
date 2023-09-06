@@ -1,7 +1,5 @@
 use std::fmt::{Display, Formatter, Result};
 
-use crate::Value;
-
 #[derive(Debug, Clone)]
 pub enum Expression {
     Literal(Literal),
@@ -23,7 +21,7 @@ impl Display for Literal {
             Literal::Int(n) => write!(f, "{}", n),
             Literal::Float(n) => write!(f, "{}", n),
             Literal::String(s) => write!(f, "{}", s),
-            Literal::List(l) => write!(f, "list"),
+            Literal::List(_) => write!(f, "list"),
         }
     }
 }

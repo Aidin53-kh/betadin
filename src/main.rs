@@ -1,5 +1,5 @@
 use runtime::eval::program::eval_program;
-use std::fmt::{write, Display};
+use std::fmt::Display;
 use std::ops::{Add, Div, Mul, Sub};
 use std::{collections::HashMap, f32::consts::PI, fs};
 
@@ -11,7 +11,7 @@ lalrpop_util::lalrpop_mod!(pub grammar);
 mod ast;
 mod runtime;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Null,
     Int(i32),
@@ -253,6 +253,60 @@ fn ak_cos(vs: Vec<Value>) -> Result<Value, String> {
         None => Err(format!("the first argument is required")),
     }
 }
+fn ak_sin(vs: Vec<Value>) -> Result<Value, String> {
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::Int(n) => return Ok(Value::Float((*n as f32).sin())),
+            Value::Float(n) => return Ok(Value::Float(n.sin())),
+            _ => return Err(format!("the first argument most be a number")),
+        },
+        None => Err(format!("the first argument is required")),
+    }
+}
+fn ak_tan(vs: Vec<Value>) -> Result<Value, String> {
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::Int(n) => return Ok(Value::Float((*n as f32).tan())),
+            Value::Float(n) => return Ok(Value::Float(n.tan())),
+            _ => return Err(format!("the first argument most be a number")),
+        },
+        None => Err(format!("the first argument is required")),
+    }
+}
+fn ak_abs(vs: Vec<Value>) -> Result<Value, String> {
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::Int(n) => return Ok(Value::Float((*n as f32).abs())),
+            Value::Float(n) => return Ok(Value::Float(n.abs())),
+            _ => return Err(format!("the first argument most be a number")),
+        },
+        None => Err(format!("the first argument is required")),
+    }
+}
+fn ak_pow(vs: Vec<Value>) -> Result<Value, String> {
+    match vs.get(0) {
+        Some(value1) => match value1 {
+            Value::Int(n1) => match vs.get(1) {
+                Some(value2) => match value2 {
+                    Value::Int(n2) => Ok(Value::Float((*n1 as f32).powi(*n2))),
+                    Value::Float(n2) => Ok(Value::Float((*n1 as f32).powf(*n2))),
+                    _ => return Err(format!("the second argument most be a number")),
+                },
+                None => return Err(format!("the second argument is required")),
+            },
+            Value::Float(n1) => match vs.get(1) {
+                Some(value2) => match value2 {
+                    Value::Int(n2) => Ok(Value::Float(n1.powi(*n2))),
+                    Value::Float(n2) => Ok(Value::Float(n1.powf(*n2))),
+                    _ => return Err(format!("the second argument most be a number")),
+                },
+                None => return Err(format!("the second argument is required")),
+            },
+            _ => return Err(format!("the first argument most be a number")),
+        },
+        None => Err(format!("the first argument is required")),
+    }
+}
 fn ak_len(vs: Vec<Value>) -> Result<Value, String> {
     match vs.get(0) {
         Some(value) => {
@@ -317,6 +371,22 @@ fn main() -> Result<(), String> {
                     Export::Item {
                         name: String::from("cos"),
                         value: Value::BuiltInFn(ak_cos),
+                    },
+                    Export::Item {
+                        name: String::from("sin"),
+                        value: Value::BuiltInFn(ak_sin),
+                    },
+                    Export::Item {
+                        name: String::from("abs"),
+                        value: Value::BuiltInFn(ak_abs),
+                    },
+                    Export::Item {
+                        name: String::from("tan"),
+                        value: Value::BuiltInFn(ak_tan),
+                    },
+                    Export::Item {
+                        name: String::from("pow"),
+                        value: Value::BuiltInFn(ak_pow),
                     },
                 ],
             },

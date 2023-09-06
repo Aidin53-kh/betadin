@@ -28,10 +28,14 @@ pub fn eval_statement(
             return Ok(());
         }
         Statement::AssignmentStatement(name, rhs) => {
-            let value = eval_expression(env, rhs)?;
-            env.insert(name, value);
-            return Ok(());
-        } // _ => Err(format!("unhandeled statement: {:?}", statement)),
+            if let Some(_) = env.get(&name) {
+                let value = eval_expression(env, rhs)?;
+                env.insert(name, value);
+                return Ok(());
+            } else {
+                return Err(format!("variable {} is not defined", name));
+            }
+        }
     };
 }
 
