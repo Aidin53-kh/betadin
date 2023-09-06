@@ -1,6 +1,6 @@
 
 todo: 
-        1. type methods => x.to_string();
+        1. type methods => x.to_string();                                               @pass
         2. named imports => use std::collections::{map, set};
         3. function declarations
         4. const declarations

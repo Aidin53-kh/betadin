@@ -1,64 +1,12 @@
-use std::collections::HashMap;
-
 use crate::runtime::value::Value;
 use crate::Export;
 
-use super::value::Type;
-
 pub mod collections;
 pub mod math;
+pub mod prototypes;
 pub mod string;
 
-pub type Prototypes = HashMap<Type, HashMap<String, Value>>;
-
-pub fn _pow(vs: Vec<Value>, this: Value) -> Result<Value, String> {
-    match vs.get(0) {
-        Some(value) => match value {
-            Value::Int(n) => match this {
-                Value::Int(n2) => return Ok(Value::Float((n2 as f32).powi(*n))),
-                Value::Float(n2) => return Ok(Value::Float(n2.powi(*n))),
-                _ => return Err(format!("invalid this argument")),
-            },
-            Value::Float(n) => match this {
-                Value::Int(n2) => return Ok(Value::Float((n2 as f32).powf(*n))),
-                Value::Float(n2) => return Ok(Value::Float((n2 as f32).powf(*n))),
-                _ => return Err(format!("invalid this argument")),
-            },
-            _ => return Err(format!("the first argument most be a number")),
-        },
-        None => Err(format!("the first argument is required")),
-    }
-}
-
-pub fn _len(vs: Vec<Value>, value: Value) -> Result<Value, String> {
-    if vs.len() > 0 {
-        return Err(format!("expected 0 argument, but found {}", vs.len()));
-    }
-
-    match value {
-        Value::String(s) => Ok(Value::Int(s.len() as i32)),
-        Value::List(l) => Ok(Value::Int(l.len() as i32)),
-        _ => Err(format!(
-            "len dose not exist in {:?} prototype",
-            Type::from(&value)
-        )),
-    }
-}
-
-pub fn prototypes() -> Prototypes {
-    let mut proto = HashMap::new();
-
-    let mut int_proto = HashMap::new();
-    let mut string_proto = HashMap::new();
-
-    int_proto.insert(String::from("pow"), Value::BuiltInMethod(_pow));
-    string_proto.insert(String::from("len"), Value::BuiltInMethod(_len));
-
-    proto.insert(Type::Int, int_proto);
-    proto.insert(Type::String, string_proto);
-
-    proto
-}
+pub use prototypes::{prototypes, Prototypes};
 
 pub fn modules() -> Vec<Export> {
     vec![Export::Module {
