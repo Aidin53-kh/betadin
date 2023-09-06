@@ -320,6 +320,26 @@ fn ak_len(vs: Vec<Value>) -> Result<Value, String> {
     }
 }
 
+fn ak_set(vs: Vec<Value>) -> Result<Value, String> {
+    match vs.get(0) {
+        Some(value) => {
+            if let Value::List(list) = value {
+                let mut set = Vec::new();
+                for val in list.clone() {
+                    if !set.contains(&val) {
+                        set.push(val);
+                    }
+                }
+
+                return Ok(Value::List(set));
+            } else {
+                return Err(format!("the first argument most be a list"));
+            }
+        }
+        None => Err(format!("the first argument is required")),
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Export {
     Module { name: String, exports: Vec<Export> },
@@ -399,7 +419,10 @@ fn main() -> Result<(), String> {
             },
             Export::Module {
                 name: String::from("collections"),
-                exports: vec![],
+                exports: vec![Export::Item {
+                    name: String::from("set"),
+                    value: Value::BuiltInFn(ak_set),
+                }],
             },
         ],
     }];
