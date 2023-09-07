@@ -30,6 +30,7 @@ expr: Expression = {
 term: Expression = {
     <n:int> => Expression::Int(n),
     <s:string> => Expression::String(s),
+    <b:bool> => Expression::Bool(b),
     <l:list> => Expression::List(l),
     <name:identifier> "(" <args:args> ")" => Expression::Call(name, args),
     <head:expr> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
@@ -58,6 +59,11 @@ string: String = {
 
 list: Vec<Expression> = {
     "[" <head:args> "]" => head,
+}
+
+bool: bool = {
+    "true" => true,
+    "false" => false
 }
 
 identifier: String = {

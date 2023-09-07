@@ -17,4 +17,6 @@ todo:
         15. builtin fs module
       @ 16. array and string indexing => [1,2,4][0] "aidin"[3] x[i]             @pass
         17. comments => # only single line comment
+        18. unary operators => !
+        19. boolean literal => true false
 

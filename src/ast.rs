@@ -22,10 +22,10 @@ pub enum Expression {
     Int(i32),
     Float(f32),
     String(String),
+    Bool(bool),
     List(Vec<Expression>),
     Identifier(String),
     Call(String, Vec<Expression>),
     MethodCall(Box<Expression>, Box<Expression>),
-    Index(Box<Expression>, Box<Expression>)
+    Index(Box<Expression>, Box<Expression>),
 }
-

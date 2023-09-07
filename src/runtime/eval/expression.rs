@@ -13,6 +13,7 @@ pub fn eval_expression(
         Expression::Int(n) => Ok(Value::Int(n)),
         Expression::Float(n) => Ok(Value::Float(n)),
         Expression::String(s) => Ok(Value::String(s)),
+        Expression::Bool(b) => Ok(Value::Bool(b)),
         Expression::List(list) => {
             let mut values: Vec<Value> = Vec::new();
 
@@ -24,7 +25,6 @@ pub fn eval_expression(
 
             Ok(Value::List(values))
         }
-
         Expression::Call(name, args) => {
             let env_clone = env.clone();
             let f = env_clone
