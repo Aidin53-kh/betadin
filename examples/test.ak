@@ -1,11 +1,7 @@
-use std::math::add;
-use std::collections::set;
+let nums = [13, 5, 7, println];
 
-let x = 3;
+let names = ["aidin", nums, "hamid", "reza"];
 
-let r = [4, 3, 2,4,5,5];
+let p = names.at(1).at(3);
 
-r = r.push(3);
-r = set(r);
-
-println(r);
+p("aidin53");

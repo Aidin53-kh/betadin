@@ -50,6 +50,20 @@ impl From<&Value> for Type {
     }
 }
 
+impl From<&Value> for Value {
+    fn from(value: &Value) -> Self {
+        match value {
+            Value::Null => Value::Null,
+            Value::Int(n) => Value::Int(*n),
+            Value::Float(n) => Value::Float(*n),
+            Value::String(s) => Value::String(s.to_string()),
+            Value::List(l) => Value::List(l.to_vec()),
+            Value::BuiltInFn(f) => Value::BuiltInFn(*f),
+            Value::BuiltInMethod(f) => Value::BuiltInMethod(*f),
+        }
+    }
+}
+
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
