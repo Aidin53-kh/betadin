@@ -1,4 +1,14 @@
+use std::collections::HashMap;
+
 use crate::runtime::value::{Type, Value};
+
+pub fn list_proto() -> HashMap<String, Value> {
+    let mut list_proto = HashMap::new();
+
+    list_proto.insert(String::from("push"), Value::BuiltInMethod(_push));
+
+    list_proto
+}
 
 pub fn _push(vs: Vec<Value>, this: Value) -> Result<Value, String> {
     if vs.len() > 1 || vs.len() < 1 {

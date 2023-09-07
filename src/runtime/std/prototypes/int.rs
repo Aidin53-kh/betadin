@@ -1,6 +1,16 @@
 use crate::runtime::value::Value;
+use std::collections::HashMap;
 
 pub use super::string::_to_string;
+
+pub fn int_proto() -> HashMap<String, Value> {
+    let mut int_proto = HashMap::new();
+
+    int_proto.insert(String::from("pow"), Value::BuiltInMethod(_pow));
+    int_proto.insert(String::from("to_string"), Value::BuiltInMethod(_to_string));
+
+    int_proto
+}
 
 pub fn _pow(vs: Vec<Value>, this: Value) -> Result<Value, String> {
     match vs.get(0) {

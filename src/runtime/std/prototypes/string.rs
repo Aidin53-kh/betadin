@@ -1,4 +1,15 @@
+use std::collections::HashMap;
+
 use crate::runtime::value::{Type, Value};
+
+pub fn string_proto() -> HashMap<String, Value> {
+    let mut string_proto = HashMap::new();
+
+    string_proto.insert(String::from("len"), Value::BuiltInMethod(_len));
+    string_proto.insert(String::from("to_string"), Value::BuiltInMethod(_to_string));
+
+    string_proto
+}
 
 pub fn _len(vs: Vec<Value>, this: Value) -> Result<Value, String> {
     if vs.len() > 0 {
