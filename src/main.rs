@@ -11,6 +11,7 @@ lalrpop_util::lalrpop_mod!(pub grammar);
 
 mod ast;
 mod runtime;
+mod utils;
 
 #[derive(Debug, Clone)]
 pub enum Export {

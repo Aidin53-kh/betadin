@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::ast::expression::{Expression, Literal};
+use crate::ast::Expression;
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::{Type, Value};
 
@@ -10,24 +10,21 @@ pub fn eval_expression(
     prototypes: Prototypes,
 ) -> Result<Value, String> {
     match expression {
-        Expression::Literal(v) => {
-            return match v {
-                Literal::Int(n) => Ok(Value::Int(n)),
-                Literal::Float(n) => Ok(Value::Float(n)),
-                Literal::String(s) => Ok(Value::String(s)),
-                Literal::List(list) => {
-                    let mut values: Vec<Value> = Vec::new();
+        Expression::Int(n) => Ok(Value::Int(n)),
+        Expression::Float(n) => Ok(Value::Float(n)),
+        Expression::String(s) => Ok(Value::String(s)),
+        Expression::List(list) => {
+            let mut values: Vec<Value> = Vec::new();
 
-                    for expr in list {
-                        let value = eval_expression(env, expr, prototypes.clone())?;
+            for expr in list {
+                let value = eval_expression(env, expr, prototypes.clone())?;
 
-                        values.push(value);
-                    }
-
-                    Ok(Value::List(values))
-                }
+                values.push(value);
             }
+
+            Ok(Value::List(values))
         }
+
         Expression::Call(name, args) => {
             let env_clone = env.clone();
             let f = env_clone

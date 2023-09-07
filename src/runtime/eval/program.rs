@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::ast::program::Program;
+use crate::ast::Program;
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::Value;
 use crate::Export;

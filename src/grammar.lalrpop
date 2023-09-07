@@ -1,7 +1,5 @@
-use crate::ast::statement::*;
-use crate::ast::program::*;
-use crate::ast::expression::*;
-use crate::ast::utils::*;
+use crate::ast::*;
+use crate::utils::*;
 
 use std::str::FromStr;
 
@@ -30,7 +28,9 @@ expr: Expression = {
 }
 
 term: Expression = {
-    <l:literal> => Expression::Literal(l),
+    <n:int> => Expression::Int(n),
+    <s:string> => Expression::String(s),
+    <l:list> => Expression::List(l),
     <name:identifier> "(" <args:args> ")" => Expression::Call(name, args),
     <head:expr> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
     <name:identifier> => Expression::Identifier(name),
@@ -46,12 +46,6 @@ args: Vec<Expression> = {
     () => vec![],
     <args:args> "," <e:expr> => append(args, e),
     <e:expr> => vec![e]
-}
-
-literal: Literal = {
-    <n:int> => Literal::Int(n),
-    <s:string> => Literal::String(s),
-    <l:list> => Literal::List(l)
 }
 
 int: i32 = {

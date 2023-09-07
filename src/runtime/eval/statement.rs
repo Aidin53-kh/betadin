@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use super::expression::eval_expression;
-use crate::ast::statement::Statement;
+use crate::ast::Statement;
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::Value;
 use crate::Export;
@@ -10,7 +10,7 @@ pub fn eval_statement(
     env: &mut HashMap<String, Value>,
     statement: Statement,
     modules: Vec<Export>,
-    prototypes: Prototypes
+    prototypes: Prototypes,
 ) -> Result<(), String> {
     match statement {
         Statement::ExpressionStatement(expr) => {

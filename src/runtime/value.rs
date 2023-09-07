@@ -204,8 +204,8 @@ impl Sub for &Value {
             Value::Null => Err(format!("cannot sub null with any thing")),
             Value::Int(lhs) => match rhs {
                 Value::Null => Err(format!("cannot sub int with null")),
-                Value::Int(rhs) => Ok(Value::Int(lhs / rhs)),
-                Value::Float(rhs) => Ok(Value::Float(*lhs as f32 / rhs)),
+                Value::Int(rhs) => Ok(Value::Int(lhs - rhs)),
+                Value::Float(rhs) => Ok(Value::Float(*lhs as f32 - rhs)),
                 Value::String(_) => Err(format!("cannot sub int with string")),
                 Value::BuiltInFn(_) => Err(format!("cannot sub int with function")),
                 Value::List(_) => todo!(),
@@ -213,8 +213,8 @@ impl Sub for &Value {
             },
             Value::Float(lhs) => match rhs {
                 Value::Null => Err(format!("cannot sub float with null")),
-                Value::Int(rhs) => Ok(Value::Float(lhs / *rhs as f32)),
-                Value::Float(rhs) => Ok(Value::Float(lhs / rhs)),
+                Value::Int(rhs) => Ok(Value::Float(lhs - *rhs as f32)),
+                Value::Float(rhs) => Ok(Value::Float(lhs - rhs)),
                 Value::String(_) => Err(format!("cannot sub float with string")),
                 Value::BuiltInFn(_) => return Err(format!("cannot nul float with function")),
                 Value::List(_) => todo!(),
