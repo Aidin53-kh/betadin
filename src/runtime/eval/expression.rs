@@ -101,5 +101,58 @@ pub fn eval_expression(
                 Err(format!("only method call allowed"))
             }
         }
+        Expression::Index(expr, loc) => {
+            let expr_value = eval_expression(env, *expr, prototypes.clone())?;
+
+            match &expr_value {
+                Value::String(s) => {
+                    let loc_value = eval_expression(env, *loc, prototypes.clone())?;
+
+                    match loc_value {
+                        Value::Int(index) => {
+                            if let Some(res) = s.chars().nth(index as usize) {
+                                return Ok(Value::String(res.to_string()));
+                            } else {
+                                return Err(format!("index out of bounds"));
+                            }
+                        }
+                        _ => {
+                            return Err(format!(
+                                "the type {:?} cannot be indexed by {:?}",
+                                Type::from(&expr_value),
+                                Type::from(&loc_value)
+                            ))
+                        }
+                    }
+                }
+                Value::List(l) => {
+                    let loc_value = eval_expression(env, *loc, prototypes.clone())?;
+
+                    match loc_value {
+                        Value::Int(index) => {
+                            if let Some(res) = l.get(index as usize) {
+                                return Ok(Value::from(res));
+                            } else {
+                                return Err(format!("index out of bounds"));
+                            }
+                        }
+                        _ => {
+                            return Err(format!(
+                                "the type {:?} cannot be indexed by {:?}",
+                                Type::from(&expr_value),
+                                Type::from(&loc_value)
+                            ))
+                        }
+                    }
+                }
+                _ => {
+                    return Err(format!(
+                        "cannot index into a value of type {:?}",
+                        Type::from(&expr_value)
+                    ));
+                }
+            }
+            // println!("loc: {:?}", loc);
+        }
     }
 }

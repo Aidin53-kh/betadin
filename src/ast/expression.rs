@@ -6,6 +6,7 @@ pub enum Expression {
     Identifier(String),
     Call(String, Vec<Expression>),
     MethodCall(Box<Expression>, Box<Expression>),
+    Index(Box<Expression>, Box<Expression>)
 }
 
 #[derive(Debug, Clone)]
