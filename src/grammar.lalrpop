@@ -10,12 +10,16 @@ pub program: Program = {
 }
 
 statement: Statement = {
-    "use" <args:import_args> ";" => Statement::ImportStatement(args),
-    <expr:expr> ";" => Statement::ExpressionStatement(expr),
-    <name:identifier> "=" <rhs:expr> ";" => Statement::AssignmentStatement(name, rhs),
-    "let" <name:identifier> "=" <rhs:expr> ";" => Statement::LetStatement(name, rhs),
-
+    let_statement,
+    use_statement,
+    expr_statement,
+    assign_statement,
 }
+
+use_statement: Statement = "use" <args:import_args> ";" => Statement::ImportStatement(args);
+let_statement: Statement = "let" <name:identifier> "=" <rhs:expr> ";" => Statement::LetStatement(name, rhs);
+expr_statement: Statement = <expr:expr> ";" => Statement::ExpressionStatement(expr);
+assign_statement: Statement = <name:identifier> "=" <rhs:expr> ";" => Statement::AssignmentStatement(name, rhs);
 
 import_args: Vec<String> = {
     <args:import_args> "::" <name:identifier> => append(args, name),
@@ -23,24 +27,56 @@ import_args: Vec<String> = {
 }
 
 expr: Expression = {
-    <objects:expr> "." <tail:term_>  => Expression::MethodCall(Box::new(objects), Box::new(tail)),
-    <head:term> => head,
+    expr_1
 }
 
-term: Expression = {
+expr_1: Expression = {
+    <lhs:expr> "||" <rhs:expr_2> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Or, Box::new(rhs)),
+    <lhs:expr> "&&" <rhs:expr_2> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::And, Box::new(rhs)),
+    expr_2
+}
+
+expr_2: Expression = {
+     <lhs:expr_2> "==" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::EQ, Box::new(rhs)),
+     <lhs:expr_2> "!=" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::NE, Box::new(rhs)),
+     <lhs:expr_2> ">" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::GT, Box::new(rhs)),
+     <lhs:expr_2> "<" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::LT, Box::new(rhs)),
+     <lhs:expr_2> ">=" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::GTE, Box::new(rhs)),
+     <lhs:expr_2> "<=" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::LTE, Box::new(rhs)),
+     expr_3
+}
+
+expr_3: Expression = {
+    <lhs:expr_3> "+" <rhs:expr_4> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Add, Box::new(rhs)),
+    <lhs:expr_3> "_" <rhs:expr_4> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Sub, Box::new(rhs)),
+    expr_4
+}
+
+expr_4: Expression = {
+    "!" <expr:expr_5> => Expression::UnaryOp(UnaryOpKind::Not, Box::new(expr)),   
+
+    <lhs:expr_4> "*" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Mul, Box::new(rhs)),
+    <lhs:expr_4> "/" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Div, Box::new(rhs)),
+
+    expr_5
+}
+
+expr_5: Expression = {
+    <head:expr_5> "." <tail:expr_6> => Expression::MethodCall(Box::new(head), Box::new(tail)),
+    <head:expr_5> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
+    expr_6
+}
+
+expr_6: Expression = {
+    "null" => Expression::Null,
     <n:int> => Expression::Int(n),
+    <f:float> => Expression::Float(f),
     <s:string> => Expression::String(s),
     <b:bool> => Expression::Bool(b),
     <l:list> => Expression::List(l),
-    <name:identifier> "(" <args:args> ")" => Expression::Call(name, args),
-    <head:expr> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
     <name:identifier> => Expression::Identifier(name),
-    "(" <head:term> ")" => head,
-}
-
-term_: Expression = {
     <name:identifier> "(" <args:args> ")" => Expression::Call(name, args),
-    <name:identifier> => Expression::Identifier(name),
+    "(" <expr:expr> ")" => expr
 }
 
 args: Vec<Expression> = {
@@ -51,6 +87,10 @@ args: Vec<Expression> = {
 
 int: i32 = {
     <n:r"-?[0-9]+"> => i32::from_str(n).unwrap()
+};
+
+float: f32 = {
+    <n:r"-?[0-9]+.[0-9]+"> => f32::from_str(n).unwrap()
 };
 
 string: String = {
@@ -68,4 +108,40 @@ bool: bool = {
 
 identifier: String = {
     <s:r"[a-zA-Z_][a-zA-Z_0-9]*"> => s.to_owned()
+}
+
+match {
+    r"-?[0-9]+",
+    r#""[^"]*""#,
+    r"[a-zA-Z_][a-zA-Z_0-9]*",
+    "use",
+    ";",
+    "let",
+    "=", 
+    "/", 
+    "::", 
+    "*", 
+    ">", 
+    "<",  
+    "||", 
+    "&&", 
+    ".", 
+    "<=", 
+    ">=", 
+    "+", 
+    "-", 
+    "==", 
+    "!=", 
+    "!", 
+    "_", 
+    "true", 
+    "false", 
+    "[", 
+    "]", 
+    "(", 
+    ")", 
+    "null", 
+    ","
+} else {
+    r"-?[0-9]+.[0-9]+",
 }

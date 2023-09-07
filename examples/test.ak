@@ -1,5 +1,6 @@
-use std::math::sub;
 
-let b = false;
+let x = "aiidn";
 
-println(b);
+println(x);
+
+println("x len: " + x.len());

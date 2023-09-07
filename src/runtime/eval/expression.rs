@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::ast::Expression;
+use crate::ast::{BinaryOpKind, Expression, UnaryOpKind};
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::{Type, Value};
 
@@ -10,6 +10,7 @@ pub fn eval_expression(
     prototypes: Prototypes,
 ) -> Result<Value, String> {
     match expression {
+        Expression::Null => Ok(Value::Null),
         Expression::Int(n) => Ok(Value::Int(n)),
         Expression::Float(n) => Ok(Value::Float(n)),
         Expression::String(s) => Ok(Value::String(s)),
@@ -150,6 +151,54 @@ pub fn eval_expression(
                 }
             }
             // println!("loc: {:?}", loc);
+        }
+        Expression::BinaryOp(lhs_expr, op, rhs_expr) => {
+            let lhs = eval_expression(env, *lhs_expr, prototypes.clone())?;
+            let rhs = eval_expression(env, *rhs_expr, prototypes.clone())?;
+
+            let res = match op {
+                BinaryOpKind::Add => &lhs + &rhs,
+                BinaryOpKind::Sub => &lhs - &rhs,
+                BinaryOpKind::Mul => &lhs * &rhs,
+                BinaryOpKind::Div => &lhs / &rhs,
+                BinaryOpKind::EQ => Ok(Value::Bool(lhs == rhs)),
+                BinaryOpKind::NE => Ok(Value::Bool(lhs != rhs)),
+                BinaryOpKind::GT => Ok(Value::Bool(lhs > rhs)),
+                BinaryOpKind::LT => Ok(Value::Bool(lhs < rhs)),
+                BinaryOpKind::GTE => Ok(Value::Bool(lhs >= rhs)),
+                BinaryOpKind::LTE => Ok(Value::Bool(lhs <= rhs)),
+                BinaryOpKind::And => {
+                    if let Value::Bool(v1) = lhs {
+                        if let Value::Bool(v2) = rhs {
+                            return Ok(Value::Bool(v1 && v2));
+                        } else {
+                            return Err(format!("expected bool found {:?}", Type::from(&rhs)));
+                        }
+                    } else {
+                        return Err(format!("expected bool found {:?}", Type::from(&lhs)));
+                    }
+                }
+                BinaryOpKind::Or => {
+                    if let Value::Bool(v1) = lhs {
+                        if let Value::Bool(v2) = rhs {
+                            return Ok(Value::Bool(v1 || v2));
+                        } else {
+                            return Err(format!("expected bool found {:?}", Type::from(&rhs)));
+                        }
+                    } else {
+                        return Err(format!("expected bool found {:?}", Type::from(&lhs)));
+                    }
+                }
+            };
+
+            res
+        }
+        Expression::UnaryOp(op, expr) => {
+            let value = eval_expression(env, *expr, prototypes)?;
+
+            match op {
+                UnaryOpKind::Not => !value,
+            }
         }
     }
 }

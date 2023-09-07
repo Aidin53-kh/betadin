@@ -1,7 +1,8 @@
 use std::fmt::Display;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Not, Sub};
 
-#[derive(Debug, Clone, PartialEq)]
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
     Null,
     Int(i32),
@@ -12,6 +13,7 @@ pub enum Value {
     BuiltInFn(fn(Vec<Value>) -> Result<Value, String>),
     BuiltInMethod(fn(Vec<Value>, Value) -> Result<Value, String>),
 }
+
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
@@ -81,6 +83,26 @@ impl Display for Value {
         }
     }
 }
+
+impl Not for Value {
+    type Output = Result<Value, String>;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Value::Null => Err(format!("cannot apply unary operator '!' to type null")),
+            Value::Int(_) => Err(format!("cannot apply unary operator '!' to type int")),
+            Value::Float(_) => Err(format!("cannot apply unary operator '!' to type float")),
+            Value::String(_) => Err(format!("cannot apply unary operator '!' to type string")),
+            Value::Bool(b) => Ok(Value::Bool(!b)),
+            Value::List(_) => Err(format!("cannot apply unary operator '!' to type list")),
+            Value::BuiltInFn(_) => Err(format!("cannot apply unary operator '!' to type function")),
+            Value::BuiltInMethod(_) => {
+                Err(format!("cannot apply unary operator '!' to type function"))
+            }
+        }
+    }
+}
+
 impl Add for &Value {
     type Output = Result<Value, String>;
 
