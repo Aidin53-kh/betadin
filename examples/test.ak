@@ -1,9 +1,11 @@
+use std::math::add;
 use std::collections::set;
 
-let d = set([8].push(4).push(4).push(8).push(49));
+let x = 3;
 
-println(d);
+let r = [4, 3, 2,4,5,5];
 
+r = r.push(3);
+r = set(r);
 
-
- 
+println(r);

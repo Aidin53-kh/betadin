@@ -1,5 +1,7 @@
 use crate::runtime::value::Value;
 
+pub use super::string::_to_string;
+
 pub fn _pow(vs: Vec<Value>, this: Value) -> Result<Value, String> {
     match vs.get(0) {
         Some(value) => match value {

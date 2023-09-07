@@ -1,6 +1,6 @@
 
 todo: 
-        1. type methods => x.to_string();                                               @pass
+        1. type methods => x.to_string();                                          @pass
         2. named imports => use std::collections::{map, set};
         3. function declarations
         4. const declarations
@@ -15,4 +15,5 @@ todo:
         13. logical operators => && ||
         14. builtin fs module
         15. array indexing => items[0]
+        16. comments => # only single line comment
 
