@@ -1,6 +1,8 @@
-# valueable
-let x = "aiidn";
 
-println(x); # modules 
+let x = "aidin53";
 
-println("x len: " + x.len());
+let y = [println, x.len()];
+
+(y.at(0))(3);
+
+println(y);

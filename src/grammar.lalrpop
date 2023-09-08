@@ -54,20 +54,24 @@ expr_3: Expression = {
 
 expr_4: Expression = {
     "!" <expr:expr_5> => Expression::UnaryOp(UnaryOpKind::Not, Box::new(expr)),   
-
+    
     <lhs:expr_4> "*" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Mul, Box::new(rhs)),
     <lhs:expr_4> "/" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Div, Box::new(rhs)),
-
     expr_5
 }
 
 expr_5: Expression = {
     <head:expr_5> "." <tail:expr_6> => Expression::MethodCall(Box::new(head), Box::new(tail)),
-    <head:expr_5> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
     expr_6
 }
 
 expr_6: Expression = {
+    <head:expr_6> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
+    <expr:expr_6> "(" <args:args> ")" => Expression::Call(Box::new(expr), args),
+    expr_7
+}
+
+expr_7: Expression = {
     "null" => Expression::Null,
     <n:int> => Expression::Int(n),
     <f:float> => Expression::Float(f),
@@ -75,7 +79,6 @@ expr_6: Expression = {
     <b:bool> => Expression::Bool(b),
     <l:list> => Expression::List(l),
     <name:identifier> => Expression::Identifier(name),
-    <name:identifier> "(" <args:args> ")" => Expression::Call(name, args),
     "(" <expr:expr> ")" => expr
 }
 

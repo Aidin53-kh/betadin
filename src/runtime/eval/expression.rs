@@ -26,13 +26,10 @@ pub fn eval_expression(
 
             Ok(Value::List(values))
         }
-        Expression::Call(name, args) => {
-            let env_clone = env.clone();
-            let f = env_clone
-                .get(&name)
-                .expect(&format!("{} function is not defined", name));
+        Expression::Call(expr, args) => {
+            let value = eval_expression(env, *expr, prototypes.clone())?;
 
-            match f {
+            match value {
                 Value::BuiltInFn(f) => {
                     let mut values = vec![];
 
@@ -45,7 +42,10 @@ pub fn eval_expression(
                     return Ok(value);
                 }
                 _ => {
-                    return Err(format!("{} is not a function", name));
+                    return Err(format!(
+                        "value of type '{:?}' is not callable (5)",
+                        Type::from(&value)
+                    ));
                 }
             }
         }
@@ -55,48 +55,77 @@ pub fn eval_expression(
             if let Some(data) = data {
                 return Ok(data.clone());
             } else {
-                println!("variable {} is not defied", &name);
-                return Err(format!("variable {} is not defied", name));
+                return Err(format!("{} is not defied", name));
             }
         }
         Expression::MethodCall(object, calle) => {
-            let value = eval_expression(env, *object.clone(), prototypes.to_owned())?;
+            let obj_value = eval_expression(env, *object.clone(), prototypes.clone())?;
 
-            if let Expression::Call(name, args) = *calle {
-                match prototypes.get(&Type::from(&value)) {
-                    Some(map) => match map.get(&name) {
-                        Some(f) => {
-                            if let Value::BuiltInMethod(m) = f {
-                                let mut values = vec![];
-
-                                for arg in args {
-                                    let val = eval_expression(env, arg, prototypes.clone())?;
-                                    values.push(val);
-                                }
-                                let result = m(values, value)?;
-                                return Ok(result);
-                            } else {
-                                return Err(format!("only method call allowed"));
-                            }
-                        }
+            match *calle {
+                Expression::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
+                    Some(proto) => match proto.get(&name) {
+                        Some(value) => return Ok(value.to_owned()),
                         None => {
                             return Err(format!(
-                                "{} method is not exist in {:?} prototype",
+                                "'{}' dose not exist in '{:?}' prototype",
                                 name,
-                                Type::from(&value)
+                                Type::from(&obj_value)
                             ))
                         }
                     },
                     None => {
                         return Err(format!(
-                            "{} method is not exist in {:?} prototype",
-                            name,
-                            Type::from(&value)
+                            "the prototype for type {:?} is not implemented",
+                            Type::from(&obj_value)
                         ))
                     }
+                },
+                Expression::Call(expr, args) => match *expr.clone() {
+                    Expression::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
+                        Some(proto) => match proto.get(&name) {
+                            Some(value) => match value {
+                                Value::BuiltInMethod(f) => {
+                                    let mut values = vec![];
+
+                                    for arg in args {
+                                        let val = eval_expression(env, arg, prototypes.clone())?;
+                                        values.push(val);
+                                    }
+
+                                    let res = f(values, obj_value.to_owned())?;
+                                    return Ok(res);
+                                }
+                                _ => todo!(),
+                            },
+                            None => {
+                                return Err(format!(
+                                    "'{}' dose not exist in '{:?}' prototype",
+                                    name,
+                                    Type::from(&obj_value)
+                                ))
+                            }
+                        },
+                        None => {
+                            return Err(format!(
+                                "the prototype for type {:?} is not implemented",
+                                Type::from(&obj_value)
+                            ))
+                        }
+                    },
+                    _ => {
+                        return Err(format!(
+                            "value of type {:?} not callable (2)",
+                            Type::from(&obj_value)
+                        ));
+                    }
+                },
+                Expression::Index(_, _) => todo!(),
+                _ => {
+                    return Err(format!(
+                        "value of type {:?} not callable (1)",
+                        Type::from(&obj_value)
+                    ));
                 }
-            } else {
-                Err(format!("only method call allowed"))
             }
         }
         Expression::Index(expr, loc) => {

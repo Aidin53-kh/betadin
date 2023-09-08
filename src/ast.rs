@@ -26,7 +26,7 @@ pub enum Expression {
     Bool(bool),
     List(Vec<Expression>),
     Identifier(String),
-    Call(String, Vec<Expression>),
+    Call(Box<Expression>, Vec<Expression>),
     MethodCall(Box<Expression>, Box<Expression>),
     Index(Box<Expression>, Box<Expression>),
     BinaryOp(Box<Expression>, BinaryOpKind, Box<Expression>),
