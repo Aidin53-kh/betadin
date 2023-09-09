@@ -3,10 +3,14 @@ use std::collections::HashMap;
 use crate::ast::{BinaryOpKind, Expression, UnaryOpKind};
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::{Type, Value};
+use crate::Export;
+
+use super::statement::eval_statement;
 
 pub fn eval_expression(
     env: &mut HashMap<String, Value>,
     expression: Expression,
+    modules: Vec<Export>,
     prototypes: Prototypes,
 ) -> Result<Value, String> {
     match expression {
@@ -19,7 +23,7 @@ pub fn eval_expression(
             let mut values: Vec<Value> = Vec::new();
 
             for expr in list {
-                let value = eval_expression(env, expr, prototypes.clone())?;
+                let value = eval_expression(env, expr, modules.clone(), prototypes.clone())?;
 
                 values.push(value);
             }
@@ -27,14 +31,14 @@ pub fn eval_expression(
             Ok(Value::List(values))
         }
         Expression::Call(expr, args) => {
-            let value = eval_expression(env, *expr, prototypes.clone())?;
+            let value = eval_expression(env, *expr, modules.clone(), prototypes.clone())?;
 
             match value {
                 Value::BuiltInFn(f) => {
                     let mut values = vec![];
 
                     for arg in args {
-                        let val = eval_expression(env, arg, prototypes.clone())?;
+                        let val = eval_expression(env, arg, modules.clone(), prototypes.clone())?;
                         values.push(val);
                     }
 
@@ -59,7 +63,8 @@ pub fn eval_expression(
             }
         }
         Expression::MethodCall(object, calle) => {
-            let obj_value = eval_expression(env, *object.clone(), prototypes.clone())?;
+            let obj_value =
+                eval_expression(env, *object.clone(), modules.clone(), prototypes.clone())?;
 
             match *calle {
                 Expression::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
@@ -88,7 +93,12 @@ pub fn eval_expression(
                                     let mut values = vec![];
 
                                     for arg in args {
-                                        let val = eval_expression(env, arg, prototypes.clone())?;
+                                        let val = eval_expression(
+                                            env,
+                                            arg,
+                                            modules.clone(),
+                                            prototypes.clone(),
+                                        )?;
                                         values.push(val);
                                     }
 
@@ -129,11 +139,12 @@ pub fn eval_expression(
             }
         }
         Expression::Index(expr, loc) => {
-            let expr_value = eval_expression(env, *expr, prototypes.clone())?;
+            let expr_value = eval_expression(env, *expr, modules.clone(), prototypes.clone())?;
 
             match &expr_value {
                 Value::String(s) => {
-                    let loc_value = eval_expression(env, *loc, prototypes.clone())?;
+                    let loc_value =
+                        eval_expression(env, *loc, modules.clone(), prototypes.clone())?;
 
                     match loc_value {
                         Value::Int(index) => {
@@ -153,7 +164,7 @@ pub fn eval_expression(
                     }
                 }
                 Value::List(l) => {
-                    let loc_value = eval_expression(env, *loc, prototypes.clone())?;
+                    let loc_value = eval_expression(env, *loc, modules, prototypes.clone())?;
 
                     match loc_value {
                         Value::Int(index) => {
@@ -182,8 +193,8 @@ pub fn eval_expression(
             // println!("loc: {:?}", loc);
         }
         Expression::BinaryOp(lhs_expr, op, rhs_expr) => {
-            let lhs = eval_expression(env, *lhs_expr, prototypes.clone())?;
-            let rhs = eval_expression(env, *rhs_expr, prototypes.clone())?;
+            let lhs = eval_expression(env, *lhs_expr, modules.clone(), prototypes.clone())?;
+            let rhs = eval_expression(env, *rhs_expr, modules.clone(), prototypes.clone())?;
 
             let res = match op {
                 BinaryOpKind::Add => &lhs + &rhs,
@@ -223,11 +234,42 @@ pub fn eval_expression(
             res
         }
         Expression::UnaryOp(op, expr) => {
-            let value = eval_expression(env, *expr, prototypes)?;
+            let value = eval_expression(env, *expr, modules, prototypes)?;
 
             match op {
                 UnaryOpKind::Not => !value,
             }
+        }
+        Expression::If(branchs, else_block) => {
+            for branch in branchs {
+                let value =
+                    eval_expression(env, branch.condition, modules.clone(), prototypes.clone())?;
+
+                match value {
+                    Value::Bool(b) => {
+                        if b {
+                            for statement in branch.statements {
+                                eval_statement(
+                                    env,
+                                    statement,
+                                    modules.clone(),
+                                    prototypes.clone(),
+                                )?;
+                            }
+                            return Ok(Value::Null);
+                        }
+                    }
+                    _ => return Err(format!("condition most be a boolean")),
+                }
+            }
+
+            if let Some(stmts) = else_block {
+                for statement in stmts {
+                    eval_statement(env, statement, modules.clone(), prototypes.clone())?;
+                }
+            }
+
+            Ok(Value::Null)
         }
     }
 }

@@ -1,8 +1,11 @@
 
-let x = "aidin53";
+if 3 == 2 {
+ println(111);
+} else if false {
+  println(333);
+} else {
+  println(222);
+  let x = 30;
+};
 
-let y = [println, x.len()];
-
-(y.at(0))(3);
-
-println(y);
+print(x); # bug

@@ -14,14 +14,14 @@ pub fn eval_statement(
 ) -> Result<(), String> {
     match statement {
         Statement::ExpressionStatement(expr) => {
-            eval_expression(env, expr, prototypes)?;
+            eval_expression(env, expr, modules, prototypes)?;
             return Ok(());
         }
         Statement::LetStatement(name, rhs) => {
             if let Some(_) = env.get(&name) {
                 return Err(format!("Duplicate variable {}", name));
             } else {
-                let value = eval_expression(env, rhs, prototypes)?;
+                let value = eval_expression(env, rhs, modules, prototypes)?;
                 env.insert(name, value);
                 return Ok(());
             }
@@ -32,7 +32,7 @@ pub fn eval_statement(
         }
         Statement::AssignmentStatement(name, rhs) => {
             if let Some(_) = env.get(&name) {
-                let value = eval_expression(env, rhs, prototypes)?;
+                let value = eval_expression(env, rhs, modules, prototypes)?;
                 env.insert(name, value);
                 return Ok(());
             } else {

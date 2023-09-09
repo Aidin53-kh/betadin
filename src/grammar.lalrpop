@@ -68,6 +68,7 @@ expr_5: Expression = {
 expr_6: Expression = {
     <head:expr_6> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
     <expr:expr_6> "(" <args:args> ")" => Expression::Call(Box::new(expr), args),
+    <if_stmts:if_expr> => Expression::If(if_stmts.0, if_stmts.1),
     expr_7
 }
 
@@ -82,10 +83,25 @@ expr_7: Expression = {
     "(" <expr:expr> ")" => expr
 }
 
+if_expr: (Vec<Branch>, Option<Block>) = {
+    "if" <cond:expr> <if_block:block> => (vec![Branch::new(cond, if_block)], None),
+    "if" <cond:expr> <if_block:block> "else" <else_block:block> => (vec![Branch::new(cond, if_block)], Some(else_block)),
+    "if" <cond:expr> <if_block:block>  "else" <else_if_stmts:if_expr> => {
+        let (mut branches, else_stmt) = else_if_stmts;
+        branches.insert(0, Branch::new(cond, if_block));
+
+        (branches, else_stmt)
+    }
+}
+
 args: Vec<Expression> = {
     () => vec![],
     <args:args> "," <e:expr> => append(args, e),
     <e:expr> => vec![e]
+}
+
+block: Block = {
+    "{" <stmts:statement*> "}" => stmts,
 }
 
 int: i32 = {
@@ -144,7 +160,11 @@ match {
     "(", 
     ")", 
     "null", 
-    ","
+    ",",
+    "if",
+    "else",
+    "{",
+    "}"
 } else {
     " " => {},
     "\n" => {},

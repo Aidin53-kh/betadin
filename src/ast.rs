@@ -31,7 +31,25 @@ pub enum Expression {
     Index(Box<Expression>, Box<Expression>),
     BinaryOp(Box<Expression>, BinaryOpKind, Box<Expression>),
     UnaryOp(UnaryOpKind, Box<Expression>),
+    If(Vec<Branch>, Option<Block>),
 }
+
+#[derive(Debug, Clone)]
+pub struct Branch {
+    pub condition: Expression,
+    pub statements: Block,
+}
+
+impl Branch {
+    pub fn new(condition: Expression, statements: Block) -> Self {
+        Self {
+            condition,
+            statements,
+        }
+    }
+}
+
+pub type Block = Vec<Statement>;
 
 #[derive(Debug, Clone)]
 pub enum BinaryOpKind {
