@@ -14,12 +14,27 @@ statement: Statement = {
     use_statement,
     expr_statement,
     assign_statement,
+    if_statement,
+    ret_statement,
 }
 
 use_statement: Statement = "use" <args:import_args> ";" => Statement::ImportStatement(args);
 let_statement: Statement = "let" <name:identifier> "=" <rhs:expr> ";" => Statement::LetStatement(name, rhs);
 expr_statement: Statement = <expr:expr> ";" => Statement::ExpressionStatement(expr);
 assign_statement: Statement = <name:identifier> "=" <rhs:expr> ";" => Statement::AssignmentStatement(name, rhs);
+ret_statement: Statement = "ret" <expr:expr_7> ";" => Statement::ReturnStatement(Box::new(expr));
+if_statement: Statement = {
+    "if" <cond:expr> <if_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], None),
+    "if" <cond:expr> <if_block:block> "else" <else_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], Some(else_block)),
+    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_statement> => {
+        if let Statement::IfStatement(mut branches, else_stmt) = else_if_stmts {
+            branches.insert(0, Branch::new(cond, if_block));
+            return Statement::IfStatement(branches, else_stmt);
+        } else {
+            panic!("grammar error: if statement");
+        }
+    }
+}
 
 import_args: Vec<String> = {
     <args:import_args> "::" <name:identifier> => append(args, name),
@@ -68,7 +83,6 @@ expr_5: Expression = {
 expr_6: Expression = {
     <head:expr_6> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
     <expr:expr_6> "(" <args:args> ")" => Expression::Call(Box::new(expr), args),
-    <if_stmts:if_expr> => Expression::If(if_stmts.0, if_stmts.1),
     expr_7
 }
 
@@ -81,17 +95,6 @@ expr_7: Expression = {
     <l:list> => Expression::List(l),
     <name:identifier> => Expression::Identifier(name),
     "(" <expr:expr> ")" => expr
-}
-
-if_expr: (Vec<Branch>, Option<Block>) = {
-    "if" <cond:expr> <if_block:block> => (vec![Branch::new(cond, if_block)], None),
-    "if" <cond:expr> <if_block:block> "else" <else_block:block> => (vec![Branch::new(cond, if_block)], Some(else_block)),
-    "if" <cond:expr> <if_block:block>  "else" <else_if_stmts:if_expr> => {
-        let (mut branches, else_stmt) = else_if_stmts;
-        branches.insert(0, Branch::new(cond, if_block));
-
-        (branches, else_stmt)
-    }
 }
 
 args: Vec<Expression> = {
@@ -164,7 +167,8 @@ match {
     "if",
     "else",
     "{",
-    "}"
+    "}", 
+    "ret"
 } else {
     " " => {},
     "\n" => {},

@@ -6,16 +6,21 @@ use crate::runtime::std::Prototypes;
 use crate::runtime::value::Value;
 use crate::Export;
 
+#[derive(Debug, Clone)]
+pub enum Escape {
+    None,
+    Return(Value),
+}
+
 pub fn eval_statement(
     env: &mut HashMap<String, Value>,
     statement: Statement,
     modules: Vec<Export>,
     prototypes: Prototypes,
-) -> Result<(), String> {
+) -> Result<Escape, String> {
     match statement {
         Statement::ExpressionStatement(expr) => {
             eval_expression(env, expr, modules, prototypes)?;
-            return Ok(());
         }
         Statement::LetStatement(name, rhs) => {
             if let Some(_) = env.get(&name) {
@@ -23,23 +28,71 @@ pub fn eval_statement(
             } else {
                 let value = eval_expression(env, rhs, modules, prototypes)?;
                 env.insert(name, value);
-                return Ok(());
             }
         }
         Statement::ImportStatement(args) => {
             apply_imports(env, modules, args)?;
-            return Ok(());
         }
         Statement::AssignmentStatement(name, rhs) => {
             if let Some(_) = env.get(&name) {
                 let value = eval_expression(env, rhs, modules, prototypes)?;
                 env.insert(name, value);
-                return Ok(());
             } else {
                 return Err(format!("variable {} is not defined", name));
             }
         }
+        Statement::IfStatement(branchs, else_block) => {
+            for branch in branchs {
+                let value =
+                    eval_expression(env, branch.condition, modules.clone(), prototypes.clone())?;
+
+                match value {
+                    Value::Bool(b) => {
+                        if b {
+                            let e = eval_statements(
+                                env,
+                                branch.statements,
+                                modules.clone(),
+                                prototypes.clone(),
+                            )?;
+                            return Ok(e);
+                        }
+                    }
+                    _ => return Err(format!("condition most be a boolean")),
+                }
+            }
+
+            if let Some(stmts) = else_block {
+                let e = eval_statements(env, stmts, modules.clone(), prototypes.clone())?;
+                return Ok(e);
+            }
+        }
+        Statement::ReturnStatement(expr) => {
+            let value = eval_expression(env, *expr, modules.clone(), prototypes.clone())?;
+            return Ok(Escape::Return(value));
+        }
     };
+
+    Ok(Escape::None)
+}
+
+pub fn eval_statements(
+    env: &mut HashMap<String, Value>,
+    statements: Vec<Statement>,
+    modules: Vec<Export>,
+    prototypes: Prototypes,
+) -> Result<Escape, String> {
+    for statement in &statements {
+        let e = eval_statement(env, statement.clone(), modules.clone(), prototypes.clone())?;
+        match &e {
+            Escape::None => {}
+            Escape::Return(_) => {
+                return Ok(e);
+            }
+        }
+    }
+
+    Ok(Escape::None)
 }
 
 pub fn apply_imports(

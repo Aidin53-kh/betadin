@@ -19,7 +19,7 @@ pub enum Export {
     Item { name: String, value: Value },
 }
 
-fn main() -> Result<(), String> {
+fn main() {
     let code = fs::read_to_string("./examples/test.ak").expect("unable to read the file");
     let parser = grammar::programParser::new();
     let ast = parser.parse(&code).expect("unable to parse the grammar");
@@ -30,4 +30,5 @@ fn main() -> Result<(), String> {
         runtime::std::modules(),
         runtime::std::prototypes(),
     )
+    .unwrap();
 }

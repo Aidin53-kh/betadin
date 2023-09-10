@@ -5,8 +5,6 @@ use crate::runtime::std::Prototypes;
 use crate::runtime::value::{Type, Value};
 use crate::Export;
 
-use super::statement::eval_statement;
-
 pub fn eval_expression(
     env: &mut HashMap<String, Value>,
     expression: Expression,
@@ -190,7 +188,6 @@ pub fn eval_expression(
                     ));
                 }
             }
-            // println!("loc: {:?}", loc);
         }
         Expression::BinaryOp(lhs_expr, op, rhs_expr) => {
             let lhs = eval_expression(env, *lhs_expr, modules.clone(), prototypes.clone())?;
@@ -239,37 +236,6 @@ pub fn eval_expression(
             match op {
                 UnaryOpKind::Not => !value,
             }
-        }
-        Expression::If(branchs, else_block) => {
-            for branch in branchs {
-                let value =
-                    eval_expression(env, branch.condition, modules.clone(), prototypes.clone())?;
-
-                match value {
-                    Value::Bool(b) => {
-                        if b {
-                            for statement in branch.statements {
-                                eval_statement(
-                                    env,
-                                    statement,
-                                    modules.clone(),
-                                    prototypes.clone(),
-                                )?;
-                            }
-                            return Ok(Value::Null);
-                        }
-                    }
-                    _ => return Err(format!("condition most be a boolean")),
-                }
-            }
-
-            if let Some(stmts) = else_block {
-                for statement in stmts {
-                    eval_statement(env, statement, modules.clone(), prototypes.clone())?;
-                }
-            }
-
-            Ok(Value::Null)
         }
     }
 }

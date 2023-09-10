@@ -15,6 +15,8 @@ pub enum Statement {
     ExpressionStatement(Expression),
     AssignmentStatement(String, Expression),
     ImportStatement(Vec<String>),
+    IfStatement(Vec<Branch>, Option<Block>),
+    ReturnStatement(Box<Expression>),
 }
 
 #[derive(Debug, Clone)]
@@ -31,7 +33,6 @@ pub enum Expression {
     Index(Box<Expression>, Box<Expression>),
     BinaryOp(Box<Expression>, BinaryOpKind, Box<Expression>),
     UnaryOp(UnaryOpKind, Box<Expression>),
-    If(Vec<Branch>, Option<Block>),
 }
 
 #[derive(Debug, Clone)]
