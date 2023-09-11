@@ -1,7 +1,6 @@
 use std::fmt::Display;
 use std::ops::{Add, Div, Mul, Not, Sub};
 
-
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
     Null,
@@ -13,7 +12,6 @@ pub enum Value {
     BuiltInFn(fn(Vec<Value>) -> Result<Value, String>),
     BuiltInMethod(fn(Vec<Value>, Value) -> Result<Value, String>),
 }
-
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
@@ -53,7 +51,19 @@ impl From<&Value> for Type {
         }
     }
 }
-
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Type::Null => write!(f, "null"),
+            Type::Int => write!(f, "int"),
+            Type::Float => write!(f, "float"),
+            Type::String => write!(f, "string"),
+            Type::List => write!(f, "list"),
+            Type::Func => write!(f, "function"),
+            Type::Bool => write!(f, "bool"),
+        }
+    }
+}
 impl From<&Value> for Value {
     fn from(value: &Value) -> Self {
         match value {
@@ -68,7 +78,6 @@ impl From<&Value> for Value {
         }
     }
 }
-
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -83,7 +92,6 @@ impl Display for Value {
         }
     }
 }
-
 impl Not for Value {
     type Output = Result<Value, String>;
 
@@ -102,7 +110,6 @@ impl Not for Value {
         }
     }
 }
-
 impl Add for &Value {
     type Output = Result<Value, String>;
 
@@ -136,8 +143,10 @@ impl Add for &Value {
                     Ok(Value::String(lhs.to_owned() + &rhs.to_string().to_owned()))
                 }
                 Value::String(rhs) => Ok(Value::String(lhs.to_owned() + rhs)),
-                Value::BuiltInFn(_) => return Err(format!("cannot string with function")),
-                Value::List(_) => todo!(),
+                Value::BuiltInFn(_) => return Err(format!("cannot add string with function")),
+                Value::List(rhs) => Ok(Value::String(
+                    lhs.to_owned() + Value::List(rhs.to_owned()).to_string().as_str(),
+                )),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
             },

@@ -4,6 +4,7 @@ use super::expression::eval_expression;
 use crate::ast::Statement;
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::Value;
+use crate::runtime::ScopeStack;
 use crate::Export;
 
 #[derive(Debug, Clone)]
@@ -13,44 +14,40 @@ pub enum Escape {
 }
 
 pub fn eval_statement(
-    env: &mut HashMap<String, Value>,
+    scopes: &mut ScopeStack,
     statement: Statement,
     modules: Vec<Export>,
     prototypes: Prototypes,
 ) -> Result<Escape, String> {
     match statement {
         Statement::ExpressionStatement(expr) => {
-            eval_expression(env, expr, modules, prototypes)?;
+            eval_expression(scopes, expr, modules, prototypes)?;
         }
         Statement::LetStatement(name, rhs) => {
-            if let Some(_) = env.get(&name) {
-                return Err(format!("Duplicate variable {}", name));
-            } else {
-                let value = eval_expression(env, rhs, modules, prototypes)?;
-                env.insert(name, value);
-            }
+            let value = eval_expression(scopes, rhs, modules, prototypes)?;
+            scopes.declare(name, value)?;
         }
         Statement::ImportStatement(args) => {
-            apply_imports(env, modules, args)?;
+            apply_imports(scopes, modules, args)?;
         }
         Statement::AssignmentStatement(name, rhs) => {
-            if let Some(_) = env.get(&name) {
-                let value = eval_expression(env, rhs, modules, prototypes)?;
-                env.insert(name, value);
-            } else {
-                return Err(format!("variable {} is not defined", name));
-            }
+            let value = eval_expression(scopes, rhs, modules, prototypes)?;
+            scopes.assgin(name, value)?;
         }
         Statement::IfStatement(branchs, else_block) => {
             for branch in branchs {
-                let value =
-                    eval_expression(env, branch.condition, modules.clone(), prototypes.clone())?;
+                let value = eval_expression(
+                    scopes,
+                    branch.condition,
+                    modules.clone(),
+                    prototypes.clone(),
+                )?;
 
                 match value {
                     Value::Bool(b) => {
                         if b {
                             let e = eval_statements(
-                                env,
+                                scopes,
                                 branch.statements,
                                 modules.clone(),
                                 prototypes.clone(),
@@ -63,12 +60,12 @@ pub fn eval_statement(
             }
 
             if let Some(stmts) = else_block {
-                let e = eval_statements(env, stmts, modules.clone(), prototypes.clone())?;
+                let e = eval_statements(scopes, stmts, modules.clone(), prototypes.clone())?;
                 return Ok(e);
             }
         }
         Statement::ReturnStatement(expr) => {
-            let value = eval_expression(env, *expr, modules.clone(), prototypes.clone())?;
+            let value = eval_expression(scopes, *expr, modules.clone(), prototypes.clone())?;
             return Ok(Escape::Return(value));
         }
     };
@@ -77,13 +74,20 @@ pub fn eval_statement(
 }
 
 pub fn eval_statements(
-    env: &mut HashMap<String, Value>,
+    scopes: &mut ScopeStack,
     statements: Vec<Statement>,
     modules: Vec<Export>,
     prototypes: Prototypes,
 ) -> Result<Escape, String> {
+    let mut inner_scopes = scopes.new_from_push(HashMap::new());
+
     for statement in &statements {
-        let e = eval_statement(env, statement.clone(), modules.clone(), prototypes.clone())?;
+        let e = eval_statement(
+            &mut inner_scopes,
+            statement.clone(),
+            modules.clone(),
+            prototypes.clone(),
+        )?;
         match &e {
             Escape::None => {}
             Escape::Return(_) => {
@@ -96,7 +100,7 @@ pub fn eval_statements(
 }
 
 pub fn apply_imports(
-    env: &mut HashMap<String, Value>,
+    scopes: &mut ScopeStack,
     modules: Vec<Export>,
     args: Vec<String>,
 ) -> Result<(), String> {
@@ -116,7 +120,7 @@ pub fn apply_imports(
                     if let None = args.get(i + 1) {
                         for export in exports.iter() {
                             if let Export::Item { name, value } = export {
-                                env.insert(name.to_string(), value.clone());
+                                scopes.declare_global(name.to_string(), value.clone())?;
                             }
                         }
                     } else {
@@ -127,7 +131,7 @@ pub fn apply_imports(
                     if let Some(_) = args.get(i + 1) {
                         return Err(format!("{} is not a module", arg));
                     } else {
-                        env.insert(arg.to_string(), value.to_owned());
+                        scopes.declare_global(arg.to_string(), value.to_owned())?;
                     }
                 }
             }

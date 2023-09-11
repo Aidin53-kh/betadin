@@ -1,12 +1,11 @@
-use std::collections::HashMap;
-
 use crate::ast::{BinaryOpKind, Expression, UnaryOpKind};
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::{Type, Value};
+use crate::runtime::ScopeStack;
 use crate::Export;
 
 pub fn eval_expression(
-    env: &mut HashMap<String, Value>,
+    scopes: &mut ScopeStack,
     expression: Expression,
     modules: Vec<Export>,
     prototypes: Prototypes,
@@ -21,7 +20,7 @@ pub fn eval_expression(
             let mut values: Vec<Value> = Vec::new();
 
             for expr in list {
-                let value = eval_expression(env, expr, modules.clone(), prototypes.clone())?;
+                let value = eval_expression(scopes, expr, modules.clone(), prototypes.clone())?;
 
                 values.push(value);
             }
@@ -29,14 +28,15 @@ pub fn eval_expression(
             Ok(Value::List(values))
         }
         Expression::Call(expr, args) => {
-            let value = eval_expression(env, *expr, modules.clone(), prototypes.clone())?;
+            let value = eval_expression(scopes, *expr, modules.clone(), prototypes.clone())?;
 
             match value {
                 Value::BuiltInFn(f) => {
                     let mut values = vec![];
 
                     for arg in args {
-                        let val = eval_expression(env, arg, modules.clone(), prototypes.clone())?;
+                        let val =
+                            eval_expression(scopes, arg, modules.clone(), prototypes.clone())?;
                         values.push(val);
                     }
 
@@ -51,18 +51,13 @@ pub fn eval_expression(
                 }
             }
         }
-        Expression::Identifier(name) => {
-            let data = env.get(&name);
-
-            if let Some(data) = data {
-                return Ok(data.clone());
-            } else {
-                return Err(format!("{} is not defied", name));
-            }
-        }
+        Expression::Identifier(name) => match scopes.get(&name) {
+            Some(v) => Ok(v),
+            None => Err(format!("{} is not defied", name)),
+        },
         Expression::MethodCall(object, calle) => {
             let obj_value =
-                eval_expression(env, *object.clone(), modules.clone(), prototypes.clone())?;
+                eval_expression(scopes, *object.clone(), modules.clone(), prototypes.clone())?;
 
             match *calle {
                 Expression::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
@@ -92,7 +87,7 @@ pub fn eval_expression(
 
                                     for arg in args {
                                         let val = eval_expression(
-                                            env,
+                                            scopes,
                                             arg,
                                             modules.clone(),
                                             prototypes.clone(),
@@ -137,12 +132,12 @@ pub fn eval_expression(
             }
         }
         Expression::Index(expr, loc) => {
-            let expr_value = eval_expression(env, *expr, modules.clone(), prototypes.clone())?;
+            let expr_value = eval_expression(scopes, *expr, modules.clone(), prototypes.clone())?;
 
             match &expr_value {
                 Value::String(s) => {
                     let loc_value =
-                        eval_expression(env, *loc, modules.clone(), prototypes.clone())?;
+                        eval_expression(scopes, *loc, modules.clone(), prototypes.clone())?;
 
                     match loc_value {
                         Value::Int(index) => {
@@ -162,7 +157,7 @@ pub fn eval_expression(
                     }
                 }
                 Value::List(l) => {
-                    let loc_value = eval_expression(env, *loc, modules, prototypes.clone())?;
+                    let loc_value = eval_expression(scopes, *loc, modules, prototypes.clone())?;
 
                     match loc_value {
                         Value::Int(index) => {
@@ -190,8 +185,8 @@ pub fn eval_expression(
             }
         }
         Expression::BinaryOp(lhs_expr, op, rhs_expr) => {
-            let lhs = eval_expression(env, *lhs_expr, modules.clone(), prototypes.clone())?;
-            let rhs = eval_expression(env, *rhs_expr, modules.clone(), prototypes.clone())?;
+            let lhs = eval_expression(scopes, *lhs_expr, modules.clone(), prototypes.clone())?;
+            let rhs = eval_expression(scopes, *rhs_expr, modules.clone(), prototypes.clone())?;
 
             let res = match op {
                 BinaryOpKind::Add => &lhs + &rhs,
@@ -231,7 +226,7 @@ pub fn eval_expression(
             res
         }
         Expression::UnaryOp(op, expr) => {
-            let value = eval_expression(env, *expr, modules, prototypes)?;
+            let value = eval_expression(scopes, *expr, modules, prototypes)?;
 
             match op {
                 UnaryOpKind::Not => !value,

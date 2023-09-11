@@ -1,8 +1,10 @@
+use std::collections::HashMap;
 use std::fs;
+use std::sync::{Arc, Mutex};
 
-use runtime::env::Env;
 use runtime::eval::program::eval_program;
 use runtime::value::Value;
+use runtime::ScopeStack;
 
 #[macro_use]
 extern crate lalrpop_util;
@@ -19,16 +21,54 @@ pub enum Export {
     Item { name: String, value: Value },
 }
 
-fn main() {
+pub fn ak_print(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 1 || vs.len() < 1 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(value) => {
+            print!("{}", value);
+            return Ok(Value::Null);
+        }
+        None => return Err(format!("the first argument is required")),
+    }
+}
+
+pub fn ak_println(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 1 || vs.len() < 1 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(value) => {
+            println!("{}", value);
+            return Ok(Value::Null);
+        }
+        None => return Err(format!("the first argument is required")),
+    }
+}
+
+fn main() -> Result<(), String> {
+    let mut gs = HashMap::new();
+
+    gs.insert(String::from("print"), Value::BuiltInFn(ak_print));
+    gs.insert(String::from("println"), Value::BuiltInFn(ak_println));
+
+    let global_scope = Arc::new(Mutex::new(gs));
+
+    let mut scopes = ScopeStack::new(vec![global_scope]);
+
     let code = fs::read_to_string("./examples/test.ak").expect("unable to read the file");
     let parser = grammar::programParser::new();
     let ast = parser.parse(&code).expect("unable to parse the grammar");
     // println!("{:#?}", ast);
     eval_program(
-        &mut Env::new(),
+        &mut scopes,
         ast,
         runtime::std::modules(),
         runtime::std::prototypes(),
-    )
-    .unwrap();
+    )?;
+    // println!("{:#?}", scopes);
+    Ok(())
 }

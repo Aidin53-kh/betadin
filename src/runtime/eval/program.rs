@@ -1,20 +1,21 @@
-use std::collections::HashMap;
-
 use crate::ast::Program;
 use crate::runtime::std::Prototypes;
-use crate::runtime::value::Value;
+use crate::runtime::ScopeStack;
 use crate::Export;
 
 use super::statement::{eval_statements, Escape};
 
 pub fn eval_program(
-    env: &mut HashMap<String, Value>,
+    scopes: &mut ScopeStack,
     program: Program,
     modules: Vec<Export>,
     prototypes: Prototypes,
 ) -> Result<Escape, String> {
-    let e = eval_statements(env, program.statements, modules, prototypes)?;
+    let e = eval_statements(scopes, program.statements, modules, prototypes)?;
 
-    println!("result of program: {:?}", e);
+    if let Escape::Return(_) = e {
+        return Err(format!("return outside of a function"));
+    }
+
     Ok(e)
 }

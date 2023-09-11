@@ -1,3 +1,3 @@
+pub mod expression;
 pub mod program;
 pub mod statement;
-pub mod expression;
