@@ -91,9 +91,9 @@ pub fn eval_statement(
 
                         match ret {
                             Escape::None => {}
+                            Escape::Continue => {}
                             Escape::Return(v) => return Ok(Escape::Return(v)),
                             Escape::Break => return Ok(Escape::None),
-                            Escape::Continue => continue,
                         }
                     }
                 }
@@ -102,6 +102,32 @@ pub fn eval_statement(
         }
         Statement::BreakStatement => return Ok(Escape::Break),
         Statement::ContinueStatement => return Ok(Escape::Continue),
+        Statement::WhileStatement(cond, block) => loop {
+            let value = eval_expression(scopes, cond.clone(), modules.clone(), prototypes.clone())?;
+
+            match value {
+                Value::Bool(b) => {
+                    if !b {
+                        break;
+                    }
+
+                    let ret = eval_statements(
+                        scopes,
+                        block.clone(),
+                        modules.clone(),
+                        prototypes.clone(),
+                    )?;
+
+                    match ret {
+                        Escape::None => {}
+                        Escape::Continue => {}
+                        Escape::Return(v) => return Ok(Escape::Return(v)),
+                        Escape::Break => return Ok(Escape::None),
+                    }
+                }
+                _ => return Err(format!("condition most be a boolean")),
+            }
+        },
     };
 
     Ok(Escape::None)

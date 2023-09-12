@@ -83,8 +83,8 @@ pub fn eval_expression(
                     match ret {
                         Escape::None => Ok(Value::Null),
                         Escape::Return(value) => Ok(value),
-                        Escape::Break => Err(format!("break outside of loop")),
-                        Escape::Continue => Err(format!("continue out side of loop")),
+                        Escape::Break => Err(format!("break outside of loop (2)")),
+                        Escape::Continue => Err(format!("continue out side of loop (2)")),
                     }
                 }
                 _ => {

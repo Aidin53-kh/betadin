@@ -19,8 +19,9 @@ pub enum Statement {
     ReturnStatement(Expression),
     FnStatement(String, Vec<String>, Block),
     ForStatement(String, Expression, Block),
+    WhileStatement(Expression, Block),
     BreakStatement,
-    ContinueStatement
+    ContinueStatement,
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

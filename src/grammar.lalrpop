@@ -20,6 +20,7 @@ statement: Statement = {
     for_statement,
     break_statement,
     continue_statement,
+    while_statement,
 }
 
 use_statement: Statement = "use" <args:import_args> ";" => Statement::ImportStatement(args);
@@ -31,6 +32,7 @@ fn_statement: Statement = "fn" <name:identifier> "(" <params:params> ")" <block:
 for_statement: Statement = "for" <lhs:identifier> "in" <iter:expr> <block:block> => Statement::ForStatement(lhs, iter, block);
 break_statement: Statement = "break" ";" => Statement::BreakStatement;
 continue_statement: Statement = "continue" ";" => Statement::ContinueStatement;
+while_statement: Statement = "while" <cond:expr> <block:block> => Statement::WhileStatement(cond, block);
 if_statement: Statement = {
     "if" <cond:expr> <if_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], None),
     "if" <cond:expr> <if_block:block> "else" <else_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], Some(else_block)),
@@ -189,6 +191,7 @@ match {
     "in",
     "break",
     "continue",
+    "while"
 } else {
     " " => {},
     "\n" => {},
