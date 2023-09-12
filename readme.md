@@ -2,8 +2,8 @@
 todo: 
         1. type methods => x.to_string();                                       [pass]
         2. named imports => use std::collections::{map, set};
-      @ 3. function declarations                                                [current]
-        4. const declarations
+      @ 3. function declarations                                                [pass]
+      @ 4. const declarations                                                   [current]
       @ 5. for statement                                                        [current]
       @ 6. while statement                                                      [current]
         7. if statement                                                         [pass]

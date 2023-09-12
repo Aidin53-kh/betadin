@@ -46,13 +46,13 @@ pub fn eval_statement(
                 match value {
                     Value::Bool(b) => {
                         if b {
-                            let e = eval_statements(
+                            let ret = eval_statements(
                                 scopes,
                                 branch.statements,
                                 modules.clone(),
                                 prototypes.clone(),
                             )?;
-                            return Ok(e);
+                            return Ok(ret);
                         }
                     }
                     _ => return Err(format!("condition most be a boolean")),
@@ -70,6 +70,31 @@ pub fn eval_statement(
         }
         Statement::FnStatement(name, args, block) => {
             scopes.declare(name, Value::Func(args, block))?;
+        }
+        Statement::ForStatement(lhs, iter, block) => {
+            let iter_val = eval_expression(scopes, iter, modules.clone(), prototypes.clone())?;
+
+            match iter_val {
+                Value::List(values) => {
+                    for value in values {
+                        let mut inner_scopes = scopes.new_from_push(HashMap::new());
+
+                        inner_scopes.declare(lhs.clone(), value)?;
+                        let ret = eval_statements(
+                            &mut inner_scopes,
+                            block.to_vec(),
+                            modules.clone(),
+                            prototypes.clone(),
+                        )?;
+
+                        match ret {
+                            Escape::None => {}
+                            Escape::Return(v) => return Ok(Escape::Return(v)),
+                        }
+                    }
+                }
+                _ => return Err(format!("iterator most be a list")),
+            }
         }
     };
 

@@ -16,7 +16,8 @@ statement: Statement = {
     assign_statement,
     if_statement,
     ret_statement,
-    fn_statement
+    fn_statement,
+    for_statement,
 }
 
 use_statement: Statement = "use" <args:import_args> ";" => Statement::ImportStatement(args);
@@ -25,6 +26,7 @@ expr_statement: Statement = <expr:expr> ";" => Statement::ExpressionStatement(ex
 assign_statement: Statement = <name:identifier> "=" <rhs:expr> ";" => Statement::AssignmentStatement(name, rhs);
 ret_statement: Statement = "ret" <expr:expr> ";" => Statement::ReturnStatement(expr);
 fn_statement: Statement = "fn" <name:identifier> "(" <params:params> ")" <block:block> => Statement::FnStatement(name, params, block);
+for_statement: Statement = "for" <lhs:identifier> "in" <iter:expr> <block:block> => Statement::ForStatement(lhs, iter, block);
 if_statement: Statement = {
     "if" <cond:expr> <if_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], None),
     "if" <cond:expr> <if_block:block> "else" <else_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], Some(else_block)),
@@ -178,7 +180,9 @@ match {
     "{",
     "}", 
     "ret",
-    "fn"
+    "fn",
+    "for",
+    "in"
 } else {
     " " => {},
     "\n" => {},

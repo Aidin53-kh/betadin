@@ -1,22 +1,9 @@
-fn double(x) {
-    ret x * 2;
-}
-
-fn set(arr) {
-    use std::collections::set;
-
-    ret set(arr);
-}
-
-println(set([1, 1, 2, 2, 3, 3, 4, 2, 1, 5, 7]));
-println(double(7));
-
-fn max(x, y) {
-    if x > y {
-        ret x;
-    } else {
-        ret y;
+fn main() {
+    for i in [1, 2, 3, 4, 5] {
+        if i == 3 {
+            ret 3;
+        }
     }
 }
 
-println("the max of 3 and 5 = " + max(3, 5));
+println(main());

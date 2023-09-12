@@ -18,6 +18,7 @@ pub enum Statement {
     IfStatement(Vec<Branch>, Option<Block>),
     ReturnStatement(Expression),
     FnStatement(String, Vec<String>, Block),
+    ForStatement(String, Expression, Block),
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
