@@ -31,7 +31,7 @@ pub fn ak_print(vs: Vec<Value>) -> Result<Value, String> {
             print!("{}", value);
             return Ok(Value::Null);
         }
-        None => return Err(format!("the first argument is required")),
+        None => return Err(format!("expected 1 argument, but found {}", vs.len())),
     }
 }
 
@@ -45,7 +45,20 @@ pub fn ak_println(vs: Vec<Value>) -> Result<Value, String> {
             println!("{}", value);
             return Ok(Value::Null);
         }
-        None => return Err(format!("the first argument is required")),
+        None => return Err(format!("expected 1 argument, but found {}", vs.len())),
+    }
+}
+
+pub fn ak_panic(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 1 || vs.len() < 1 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(value) => {
+            return Err(format!("{}", value));
+        }
+        None => return Err(format!("expected 1 argument, but found {}", vs.len())),
     }
 }
 
@@ -59,6 +72,11 @@ fn main() -> Result<(), String> {
     gs.insert(
         String::from("println"),
         (Value::BuiltInFn(ak_println), DeclType::Immutable),
+    );
+
+    gs.insert(
+        String::from("panic"),
+        (Value::BuiltInFn(ak_panic), DeclType::Immutable),
     );
 
     let global_scope = Arc::new(Mutex::new(gs));
