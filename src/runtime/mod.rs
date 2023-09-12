@@ -40,22 +40,6 @@ impl ScopeStack {
         Ok(())
     }
 
-    fn declare_global(&mut self, name: String, value: Value) -> Result<(), String> {
-        let mut current_scope = self
-            .0
-            .first()
-            .expect("`ScopeStack` stack shouldn't be empty")
-            .lock()
-            .unwrap();
-
-        if current_scope.contains_key(&name) {
-            return Err(format!("'{}' already define in this scope", name));
-        }
-        current_scope.insert(name, value);
-
-        Ok(())
-    }
-
     fn assgin(&mut self, name: String, value: Value) -> Result<(), String> {
         for scope in self.0.iter().rev() {
             let mut unlocked_scope = scope.lock().unwrap();

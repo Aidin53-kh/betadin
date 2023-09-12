@@ -1,6 +1,8 @@
 use std::fmt::Display;
 use std::ops::{Add, Div, Mul, Not, Sub};
 
+use crate::ast::Block;
+
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
     Null,
@@ -11,6 +13,7 @@ pub enum Value {
     List(Vec<Value>),
     BuiltInFn(fn(Vec<Value>) -> Result<Value, String>),
     BuiltInMethod(fn(Vec<Value>, Value) -> Result<Value, String>),
+    Func(Vec<String>, Block),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -48,6 +51,7 @@ impl From<&Value> for Type {
             Value::List(_) => Type::List,
             Value::BuiltInFn(_) => Type::Func,
             Value::BuiltInMethod(_) => Type::Func,
+            Value::Func(_, _) => Type::Func,
         }
     }
 }
@@ -75,6 +79,7 @@ impl From<&Value> for Value {
             Value::List(l) => Value::List(l.to_vec()),
             Value::BuiltInFn(f) => Value::BuiltInFn(*f),
             Value::BuiltInMethod(f) => Value::BuiltInMethod(*f),
+            Value::Func(_, _) => todo!(),
         }
     }
 }
@@ -89,6 +94,7 @@ impl Display for Value {
             Value::BuiltInFn(_) => write!(f, "function"),
             Value::List(v) => write!(f, "[{}]", value_list(v.to_vec())),
             Value::BuiltInMethod(_) => write!(f, "function"),
+            Value::Func(_, _) => write!(f, "function"),
         }
     }
 }
@@ -107,6 +113,7 @@ impl Not for Value {
             Value::BuiltInMethod(_) => {
                 Err(format!("cannot apply unary operator '!' to type function"))
             }
+            Value::Func(_, _) => todo!(),
         }
     }
 }
@@ -125,6 +132,7 @@ impl Add for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::Float(lhs) => match rhs {
                 Value::Null => Err(format!("cannot add float with null")),
@@ -135,6 +143,7 @@ impl Add for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::String(lhs) => match rhs {
                 Value::Null => Err(format!("cannot add string with null")),
@@ -149,11 +158,13 @@ impl Add for &Value {
                 )),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::BuiltInFn(_) => return Err(format!("cannot add function with anything")),
             Value::List(_) => todo!(),
             Value::BuiltInMethod(_) => todo!(),
             Value::Bool(_) => todo!(),
+            Value::Func(_, _) => todo!(),
         }
     }
 }
@@ -172,6 +183,7 @@ impl Mul for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::Float(lhs) => match rhs {
                 Value::Null => Err(format!("cannot mul float with null")),
@@ -182,6 +194,7 @@ impl Mul for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::String(_) => match rhs {
                 Value::Null => Err(format!("cannot mul string with null")),
@@ -192,11 +205,13 @@ impl Mul for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::BuiltInFn(_) => return Err(format!("cannot mul function with anything")),
             Value::List(_) => todo!(),
             Value::BuiltInMethod(_) => todo!(),
             Value::Bool(_) => todo!(),
+            Value::Func(_, _) => todo!(),
         }
     }
 }
@@ -215,6 +230,7 @@ impl Div for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::Float(lhs) => match rhs {
                 Value::Null => Err(format!("cannot div float with null")),
@@ -225,6 +241,7 @@ impl Div for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::String(_) => match rhs {
                 Value::Null => Err(format!("cannot div string with null")),
@@ -235,11 +252,13 @@ impl Div for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::BuiltInFn(_) => return Err(format!("cannot div function with anything")),
             Value::List(_) => todo!(),
             Value::BuiltInMethod(_) => todo!(),
             Value::Bool(_) => todo!(),
+            Value::Func(_, _) => todo!(),
         }
     }
 }
@@ -258,6 +277,7 @@ impl Sub for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::Float(lhs) => match rhs {
                 Value::Null => Err(format!("cannot sub float with null")),
@@ -268,6 +288,7 @@ impl Sub for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::String(_) => match rhs {
                 Value::Null => Err(format!("cannot sub string with null")),
@@ -278,11 +299,13 @@ impl Sub for &Value {
                 Value::List(_) => todo!(),
                 Value::BuiltInMethod(_) => todo!(),
                 Value::Bool(_) => todo!(),
+                Value::Func(_, _) => todo!(),
             },
             Value::BuiltInFn(_) => return Err(format!("cannot sub function with anything")),
             Value::List(_) => todo!(),
             Value::BuiltInMethod(_) => todo!(),
             Value::Bool(_) => todo!(),
+            Value::Func(_, _) => todo!(),
         }
     }
 }

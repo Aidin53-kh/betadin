@@ -1,33 +1,22 @@
-use std::math;
-use std::math::consts::PI;
-use std::collections::set;
+fn double(x) {
+    ret x * 2;
+}
 
-let test = PI;
-test = "aidin53";
+fn set(arr) {
+    use std::collections::set;
 
-println(sin(3));
-println(mul(3, 6));
+    ret set(arr);
+}
 
-let t = "x";
-let x = "aidin53".len();
-if true {
-    let x = 39;
-    let names = ["aidin", "aida", "hamid", "reza"];
+println(set([1, 1, 2, 2, 3, 3, 4, 2, 1, 5, 7]));
+println(double(7));
 
-    println("names list: " + names.at(1));
-    println("set of nums: " + set([1, 2, 1, 2, 1, 2, 4, 4, 1, 2, 3, 4, 5, 6]));
-    # println(x.pow(56));
-
-    if true {
-        let x = 4;
-        println(test);
-        # println(x.to_string().len());
-    } else if true {
-        let x = false.to_string();
+fn max(x, y) {
+    if x > y {
+        ret x;
     } else {
-        let x = 499;
+        ret y;
     }
 }
-# let x = "aidin53";
-# println(t); 
 
+println("the max of 3 and 5 = " + max(3, 5));

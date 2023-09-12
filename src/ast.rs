@@ -9,17 +9,18 @@ impl Program {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Statement {
     LetStatement(String, Expression),
     ExpressionStatement(Expression),
     AssignmentStatement(String, Expression),
     ImportStatement(Vec<String>),
     IfStatement(Vec<Branch>, Option<Block>),
-    ReturnStatement(Box<Expression>),
+    ReturnStatement(Expression),
+    FnStatement(String, Vec<String>, Block),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Expression {
     Null,
     Int(i32),
@@ -35,7 +36,7 @@ pub enum Expression {
     UnaryOp(UnaryOpKind, Box<Expression>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Branch {
     pub condition: Expression,
     pub statements: Block,
@@ -52,7 +53,7 @@ impl Branch {
 
 pub type Block = Vec<Statement>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum BinaryOpKind {
     // arithmatic
     Add,
@@ -71,7 +72,7 @@ pub enum BinaryOpKind {
     Or,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum UnaryOpKind {
     Not,
 }

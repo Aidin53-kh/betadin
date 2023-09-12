@@ -16,13 +16,15 @@ statement: Statement = {
     assign_statement,
     if_statement,
     ret_statement,
+    fn_statement
 }
 
 use_statement: Statement = "use" <args:import_args> ";" => Statement::ImportStatement(args);
 let_statement: Statement = "let" <name:identifier> "=" <rhs:expr> ";" => Statement::LetStatement(name, rhs);
 expr_statement: Statement = <expr:expr> ";" => Statement::ExpressionStatement(expr);
 assign_statement: Statement = <name:identifier> "=" <rhs:expr> ";" => Statement::AssignmentStatement(name, rhs);
-ret_statement: Statement = "ret" <expr:expr_7> ";" => Statement::ReturnStatement(Box::new(expr));
+ret_statement: Statement = "ret" <expr:expr> ";" => Statement::ReturnStatement(expr);
+fn_statement: Statement = "fn" <name:identifier> "(" <params:params> ")" <block:block> => Statement::FnStatement(name, params, block);
 if_statement: Statement = {
     "if" <cond:expr> <if_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], None),
     "if" <cond:expr> <if_block:block> "else" <else_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], Some(else_block)),
@@ -35,6 +37,7 @@ if_statement: Statement = {
         }
     }
 }
+
 
 import_args: Vec<String> = {
     <args:import_args> "::" <name:identifier> => append(args, name),
@@ -103,6 +106,12 @@ args: Vec<Expression> = {
     <e:expr> => vec![e]
 }
 
+params: Vec<String> = {
+    () => vec![],
+    <params:params> "," <param:identifier> => append(params, param),
+    <param:identifier> => vec![param]
+}
+
 block: Block = {
     "{" <stmts:statement*> "}" => stmts,
 }
@@ -168,7 +177,8 @@ match {
     "else",
     "{",
     "}", 
-    "ret"
+    "ret",
+    "fn"
 } else {
     " " => {},
     "\n" => {},

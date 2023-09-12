@@ -1,8 +1,12 @@
+use std::collections::HashMap;
+
 use crate::ast::{BinaryOpKind, Expression, UnaryOpKind};
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::{Type, Value};
 use crate::runtime::ScopeStack;
 use crate::Export;
+
+use super::statement::{eval_statements, Escape};
 
 pub fn eval_expression(
     scopes: &mut ScopeStack,
@@ -10,6 +14,7 @@ pub fn eval_expression(
     modules: Vec<Export>,
     prototypes: Prototypes,
 ) -> Result<Value, String> {
+
     match expression {
         Expression::Null => Ok(Value::Null),
         Expression::Int(n) => Ok(Value::Int(n)),
@@ -43,6 +48,44 @@ pub fn eval_expression(
                     let value = f(values)?;
                     return Ok(value);
                 }
+                Value::Func(params, block) => {
+                    if params.len() != args.len() {
+                        return Err(format!(
+                            "expected {} arguments but found {}",
+                            params.len(),
+                            args.len()
+                        ));
+                    }
+
+                    let mut inner_scope = scopes.new_from_push(HashMap::new());
+                    for (i, param) in params.iter().enumerate() {
+                        match args.get(i) {
+                            Some(expr) => {
+                                let value = eval_expression(
+                                    &mut inner_scope,
+                                    expr.clone(),
+                                    modules.clone(),
+                                    prototypes.clone(),
+                                )?;
+
+                                inner_scope.declare(param.to_string(), value)?;
+                            }
+                            None => {
+                                return Err(format!(
+                                    "expected {} arguments but found {}",
+                                    params.len(),
+                                    args.len()
+                                ))
+                            }
+                        }
+                    }
+
+                    let ret = eval_statements(&mut inner_scope, block, modules, prototypes)?;
+                    match ret {
+                        Escape::None => Ok(Value::Null),
+                        Escape::Return(value) => Ok(value),
+                    }
+                }
                 _ => {
                     return Err(format!(
                         "value of type '{:?}' is not callable (5)",
@@ -53,7 +96,7 @@ pub fn eval_expression(
         }
         Expression::Identifier(name) => match scopes.get(&name) {
             Some(v) => Ok(v),
-            None => Err(format!("{} is not defied", name)),
+            None => Err(format!("{} is not defied (8)", name)),
         },
         Expression::MethodCall(object, calle) => {
             let obj_value =

@@ -14,7 +14,7 @@ pub fn eval_program(
     let e = eval_statements(scopes, program.statements, modules, prototypes)?;
 
     if let Escape::Return(_) = e {
-        return Err(format!("return outside of a function"));
+        return Err(format!("return outside of function"));
     }
 
     Ok(e)

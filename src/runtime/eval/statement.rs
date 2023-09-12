@@ -65,8 +65,11 @@ pub fn eval_statement(
             }
         }
         Statement::ReturnStatement(expr) => {
-            let value = eval_expression(scopes, *expr, modules.clone(), prototypes.clone())?;
+            let value = eval_expression(scopes, expr, modules.clone(), prototypes.clone())?;
             return Ok(Escape::Return(value));
+        }
+        Statement::FnStatement(name, args, block) => {
+            scopes.declare(name, Value::Func(args, block))?;
         }
     };
 
@@ -88,11 +91,13 @@ pub fn eval_statements(
             modules.clone(),
             prototypes.clone(),
         )?;
-        match &e {
-            Escape::None => {}
-            Escape::Return(_) => {
-                return Ok(e);
-            }
+
+        if let Statement::FnStatement(_, _, _) = statement {
+            continue;
+        }
+
+        if let Escape::Return(_) = &e {
+            return Ok(e);
         }
     }
 
@@ -120,7 +125,7 @@ pub fn apply_imports(
                     if let None = args.get(i + 1) {
                         for export in exports.iter() {
                             if let Export::Item { name, value } = export {
-                                scopes.declare_global(name.to_string(), value.clone())?;
+                                scopes.declare(name.to_string(), value.clone())?;
                             }
                         }
                     } else {
@@ -131,7 +136,7 @@ pub fn apply_imports(
                     if let Some(_) = args.get(i + 1) {
                         return Err(format!("{} is not a module", arg));
                     } else {
-                        scopes.declare_global(arg.to_string(), value.to_owned())?;
+                        scopes.declare(arg.to_string(), value.to_owned())?;
                     }
                 }
             }
