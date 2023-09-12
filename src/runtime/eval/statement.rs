@@ -11,6 +11,8 @@ use crate::Export;
 pub enum Escape {
     None,
     Return(Value),
+    Break,
+    Continue,
 }
 
 pub fn eval_statement(
@@ -90,12 +92,16 @@ pub fn eval_statement(
                         match ret {
                             Escape::None => {}
                             Escape::Return(v) => return Ok(Escape::Return(v)),
+                            Escape::Break => return Ok(Escape::None),
+                            Escape::Continue => continue,
                         }
                     }
                 }
                 _ => return Err(format!("iterator most be a list")),
             }
         }
+        Statement::BreakStatement => return Ok(Escape::Break),
+        Statement::ContinueStatement => return Ok(Escape::Continue),
     };
 
     Ok(Escape::None)
@@ -121,9 +127,11 @@ pub fn eval_statements(
             continue;
         }
 
-        if let Escape::Return(_) = &e {
-            return Ok(e);
+        if let Escape::None = e {
+            continue;
         }
+
+        return Ok(e);
     }
 
     Ok(Escape::None)

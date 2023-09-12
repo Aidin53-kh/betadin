@@ -14,7 +14,6 @@ pub fn eval_expression(
     modules: Vec<Export>,
     prototypes: Prototypes,
 ) -> Result<Value, String> {
-
     match expression {
         Expression::Null => Ok(Value::Null),
         Expression::Int(n) => Ok(Value::Int(n)),
@@ -84,6 +83,8 @@ pub fn eval_expression(
                     match ret {
                         Escape::None => Ok(Value::Null),
                         Escape::Return(value) => Ok(value),
+                        Escape::Break => Err(format!("break outside of loop")),
+                        Escape::Continue => Err(format!("continue out side of loop")),
                     }
                 }
                 _ => {

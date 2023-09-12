@@ -17,5 +17,13 @@ pub fn eval_program(
         return Err(format!("return outside of function"));
     }
 
+    if let Escape::Break = e {
+        return Err(format!("break outside of loop"));
+    }
+
+    if let Escape::Continue = e {
+        return Err(format!("continue outside of loop"));
+    }
+
     Ok(e)
 }
