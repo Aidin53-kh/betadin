@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::ast::{BinaryOpKind, Expression, UnaryOpKind};
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::{Type, Value};
-use crate::runtime::ScopeStack;
+use crate::runtime::{DeclType, ScopeStack};
 use crate::Export;
 
 use super::statement::{eval_statements, Escape};
@@ -67,7 +67,7 @@ pub fn eval_expression(
                                     prototypes.clone(),
                                 )?;
 
-                                inner_scope.declare(param.to_string(), value)?;
+                                inner_scope.declare(param.to_string(), value, DeclType::Mutable)?;
                             }
                             None => {
                                 return Err(format!(

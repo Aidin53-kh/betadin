@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use runtime::eval::program::eval_program;
 use runtime::value::Value;
-use runtime::ScopeStack;
+use runtime::{DeclType, ScopeStack};
 
 #[macro_use]
 extern crate lalrpop_util;
@@ -52,8 +52,14 @@ pub fn ak_println(vs: Vec<Value>) -> Result<Value, String> {
 fn main() -> Result<(), String> {
     let mut gs = HashMap::new();
 
-    gs.insert(String::from("print"), Value::BuiltInFn(ak_print));
-    gs.insert(String::from("println"), Value::BuiltInFn(ak_println));
+    gs.insert(
+        String::from("print"),
+        (Value::BuiltInFn(ak_print), DeclType::Immutable),
+    );
+    gs.insert(
+        String::from("println"),
+        (Value::BuiltInFn(ak_println), DeclType::Immutable),
+    );
 
     let global_scope = Arc::new(Mutex::new(gs));
 

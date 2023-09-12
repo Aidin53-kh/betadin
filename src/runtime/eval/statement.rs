@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use super::expression::eval_expression;
-use crate::ast::Statement;
+use crate::ast::{Expression, Statement};
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::Value;
-use crate::runtime::ScopeStack;
+use crate::runtime::{DeclType, ScopeStack};
 use crate::Export;
 
 #[derive(Debug, Clone)]
@@ -27,7 +27,11 @@ pub fn eval_statement(
         }
         Statement::LetStatement(name, rhs) => {
             let value = eval_expression(scopes, rhs, modules, prototypes)?;
-            scopes.declare(name, value)?;
+            scopes.declare(name, value, DeclType::Mutable)?;
+        }
+        Statement::ConstStatement(name, rhs) => {
+            let value = eval_expression(scopes, rhs, modules, prototypes)?;
+            scopes.declare(name, value, DeclType::Immutable)?;
         }
         Statement::ImportStatement(args) => {
             apply_imports(scopes, modules, args)?;
@@ -71,7 +75,7 @@ pub fn eval_statement(
             return Ok(Escape::Return(value));
         }
         Statement::FnStatement(name, args, block) => {
-            scopes.declare(name, Value::Func(args, block))?;
+            scopes.declare(name, Value::Func(args, block), DeclType::Immutable)?;
         }
         Statement::ForStatement(lhs, iter, block) => {
             let iter_val = eval_expression(scopes, iter, modules.clone(), prototypes.clone())?;
@@ -81,7 +85,7 @@ pub fn eval_statement(
                     for value in values {
                         let mut inner_scopes = scopes.new_from_push(HashMap::new());
 
-                        inner_scopes.declare(lhs.clone(), value)?;
+                        inner_scopes.declare(lhs.clone(), value, DeclType::Mutable)?;
                         let ret = eval_statements(
                             &mut inner_scopes,
                             block.to_vec(),
@@ -184,7 +188,11 @@ pub fn apply_imports(
                     if let None = args.get(i + 1) {
                         for export in exports.iter() {
                             if let Export::Item { name, value } = export {
-                                scopes.declare(name.to_string(), value.clone())?;
+                                scopes.declare(
+                                    name.to_string(),
+                                    value.clone(),
+                                    DeclType::Immutable,
+                                )?;
                             }
                         }
                     } else {
@@ -195,7 +203,7 @@ pub fn apply_imports(
                     if let Some(_) = args.get(i + 1) {
                         return Err(format!("{} is not a module", arg));
                     } else {
-                        scopes.declare(arg.to_string(), value.to_owned())?;
+                        scopes.declare(arg.to_string(), value.to_owned(), DeclType::Immutable)?;
                     }
                 }
             }

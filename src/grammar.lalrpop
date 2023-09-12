@@ -21,10 +21,12 @@ statement: Statement = {
     break_statement,
     continue_statement,
     while_statement,
+    const_statement,
 }
 
 use_statement: Statement = "use" <args:import_args> ";" => Statement::ImportStatement(args);
 let_statement: Statement = "let" <name:identifier> "=" <rhs:expr> ";" => Statement::LetStatement(name, rhs);
+const_statement: Statement = "const" <name:identifier> "=" <rhs:expr> ";" => Statement::ConstStatement(name, rhs);
 expr_statement: Statement = <expr:expr> ";" => Statement::ExpressionStatement(expr);
 assign_statement: Statement = <name:identifier> "=" <rhs:expr> ";" => Statement::AssignmentStatement(name, rhs);
 ret_statement: Statement = "ret" <expr:expr> ";" => Statement::ReturnStatement(expr);
@@ -191,7 +193,8 @@ match {
     "in",
     "break",
     "continue",
-    "while"
+    "while",
+    "const"
 } else {
     " " => {},
     "\n" => {},

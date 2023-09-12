@@ -10,7 +10,13 @@ pub mod value;
 #[derive(Debug, Clone)]
 pub struct ScopeStack(Vec<Arc<Mutex<Scope>>>);
 
-pub type Scope = HashMap<String, Value>;
+pub type Scope = HashMap<String, (Value, DeclType)>;
+
+#[derive(Debug, Clone)]
+pub enum DeclType {
+    Mutable,
+    Immutable,
+}
 
 impl ScopeStack {
     pub fn new(scopes: Vec<Arc<Mutex<Scope>>>) -> ScopeStack {
@@ -24,7 +30,7 @@ impl ScopeStack {
         ScopeStack::new(scopes)
     }
 
-    fn declare(&mut self, name: String, value: Value) -> Result<(), String> {
+    fn declare(&mut self, name: String, value: Value, decl_type: DeclType) -> Result<(), String> {
         let mut current_scope = self
             .0
             .last()
@@ -35,7 +41,7 @@ impl ScopeStack {
         if current_scope.contains_key(&name) {
             return Err(format!("'{}' already define in this scope", name));
         }
-        current_scope.insert(name, value);
+        current_scope.insert(name, (value, decl_type));
 
         Ok(())
     }
@@ -43,8 +49,11 @@ impl ScopeStack {
     fn assgin(&mut self, name: String, value: Value) -> Result<(), String> {
         for scope in self.0.iter().rev() {
             let mut unlocked_scope = scope.lock().unwrap();
-            if let Some(_) = unlocked_scope.get(&name) {
-                unlocked_scope.insert(name.clone(), value.clone());
+            if let Some(v) = unlocked_scope.get(&name) {
+                if let DeclType::Immutable = v.1 {
+                    return Err(format!("cannot mutate a immutable item '{}'", name));
+                }
+                unlocked_scope.insert(name.clone(), (value.clone(), DeclType::Mutable));
                 return Ok(());
             }
         }
@@ -56,7 +65,7 @@ impl ScopeStack {
         for scope in self.0.iter().rev() {
             let unlocked_scope = scope.lock().unwrap();
             if let Some(v) = unlocked_scope.get(name) {
-                return Some(v.clone());
+                return Some(v.0.clone());
             }
         }
 

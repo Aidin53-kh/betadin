@@ -12,6 +12,7 @@ impl Program {
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Statement {
     LetStatement(String, Expression),
+    ConstStatement(String, Expression),
     ExpressionStatement(Expression),
     AssignmentStatement(String, Expression),
     ImportStatement(Vec<String>),
