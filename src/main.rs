@@ -64,7 +64,7 @@ pub fn ak_panic(vs: Vec<Value>) -> Result<Value, String> {
 
 fn main() -> Result<(), String> {
     let mut gs = HashMap::new();
-
+    
     gs.insert(
         String::from("print"),
         (Value::BuiltInFn(ak_print), DeclType::Immutable),

@@ -13,7 +13,7 @@ todo:
         11. arithmatic operators => + - / *                                     [pass]
         12. relational operators => == > < !=                                   [pass]
         13. logical operators => && ||                                          [pass]
-        14. builtin fs module
+        14. builtin fs module                                                   [pass]
         15. array and string indexing => [1,2,4][0] "aidin"[3] x[i]             [pass]
         16. comments => # only single line comment                              [pass]
         17. unary operators => !                                                [pass]

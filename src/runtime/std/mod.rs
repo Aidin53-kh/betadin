@@ -84,6 +84,22 @@ pub fn modules() -> Vec<Export> {
                         name: String::from("write"),
                         value: Value::BuiltInFn(_fs_write_file),
                     },
+                    Export::Item {
+                        name: String::from("rename"),
+                        value: Value::BuiltInFn(_fs_rename_file),
+                    },
+                    Export::Item {
+                        name: String::from("remove"),
+                        value: Value::BuiltInFn(_fs_remove_file),
+                    },
+                    Export::Item {
+                        name: String::from("read_dir"),
+                        value: Value::BuiltInFn(_fs_read_dir),
+                    },
+                    Export::Item {
+                        name: String::from("remove_dir"),
+                        value: Value::BuiltInFn(_fs_remove_dir),
+                    },
                 ],
             },
         ],
@@ -131,8 +147,114 @@ pub fn _fs_write_file(vs: Vec<Value>) -> Result<Value, String> {
                     }
                     _ => return Err(format!("the first argument most be a string")),
                 },
-                None => return Err(format!("expected 1 argument, but found {}", vs.len())),
+                None => return Err(format!("expected 2 argument, but found {}", vs.len())),
             },
+            _ => return Err(format!("the first argument most be a string")),
+        },
+        None => {
+            return Err(format!("expected 2 argument, but found {}", vs.len()));
+        }
+    }
+}
+
+pub fn _fs_rename_file(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 2 || vs.len() < 2 {
+        return Err(format!("expected 2 argument, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(v1) => match v1 {
+            Value::String(from) => match vs.get(1) {
+                Some(v2) => match v2 {
+                    Value::String(to) => {
+                        let res = fs::rename(from, to);
+                        match res {
+                            Ok(_) => return Ok(Value::Null),
+                            Err(e) => return Err(e.to_string()),
+                        }
+                    }
+                    _ => return Err(format!("the first argument most be a string")),
+                },
+                None => return Err(format!("expected 2 argument, but found {}", vs.len())),
+            },
+            _ => return Err(format!("the first argument most be a string")),
+        },
+        None => {
+            return Err(format!("expected 2 argument, but found {}", vs.len()));
+        }
+    }
+}
+
+pub fn _fs_remove_file(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 1 || vs.len() < 1 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::String(s) => {
+                let file_result = fs::remove_file(s);
+
+                match file_result {
+                    Ok(_) => return Ok(Value::Null),
+                    Err(e) => return Err(e.to_string()),
+                }
+            }
+            _ => return Err(format!("the first argument most be a string")),
+        },
+        None => {
+            return Err(format!("expected 1 argument, but found {}", vs.len()));
+        }
+    }
+}
+
+pub fn _fs_read_dir(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 1 || vs.len() < 1 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::String(s) => {
+                let file_result = fs::read_dir(s);
+
+                match file_result {
+                    Ok(rd) => {
+                        let mut items = vec![];
+
+                        for entry in rd.into_iter() {
+                            let t = entry.unwrap().file_name().to_string_lossy().to_string();
+                            items.push(Value::String(t));
+                        }
+
+                        return Ok(Value::List(items));
+                    }
+                    Err(e) => return Err(e.to_string()),
+                }
+            }
+            _ => return Err(format!("the first argument most be a string")),
+        },
+        None => {
+            return Err(format!("expected 1 argument, but found {}", vs.len()));
+        }
+    }
+}
+
+pub fn _fs_remove_dir(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 1 || vs.len() < 1 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::String(s) => {
+                let file_result = fs::remove_dir(s);
+
+                match file_result {
+                    Ok(_) => return Ok(Value::Null),
+                    Err(e) => return Err(e.to_string()),
+                }
+            }
             _ => return Err(format!("the first argument most be a string")),
         },
         None => {

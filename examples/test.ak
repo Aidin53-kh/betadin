@@ -1,8 +1,8 @@
-use std::fs::write;
+# use std::fs::write;
 
-const content = "my name is aidin53";
+# const content = "my name is aidin53";
 
-write("./examples/fs.ak", content);
+# write("./examples/fs.ak", content);
 
 # use std::fs::read_file;
 
