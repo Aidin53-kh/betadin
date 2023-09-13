@@ -1,6 +1,7 @@
 use ::std::collections::HashMap;
 use ::std::sync::{Arc, Mutex};
 
+use self::std::prototypes::object::object_proto;
 use self::value::Value;
 
 pub mod eval;
@@ -37,6 +38,17 @@ impl ScopeStack {
             .expect("`ScopeStack` stack shouldn't be empty")
             .lock()
             .unwrap();
+
+        if let Value::Object(props) = &value {
+            let obj_proto = object_proto();
+            let res = props
+                .into_iter()
+                .find(|kv| obj_proto.get(&kv.key).is_some());
+
+            if let Some(kv) = res {
+                return Err(format!("property '{}' is reserved in object prototype", kv.key));
+            }
+        }
 
         if current_scope.contains_key(&name) {
             return Err(format!("'{}' already define in this scope", name));

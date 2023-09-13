@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use super::expression::eval_expression;
-use crate::ast::{Expression, Statement};
+use crate::ast::Statement;
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::Value;
 use crate::runtime::{DeclType, ScopeStack};

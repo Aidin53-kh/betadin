@@ -96,6 +96,7 @@ expr_5: Expression = {
 expr_6: Expression = {
     <head:expr_6> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
     <expr:expr_6> "(" <args:args> ")" => Expression::Call(Box::new(expr), args),
+    "{" <props:props> ","? "}" => Expression::Object(props),
     expr_7
 }
 
@@ -108,6 +109,16 @@ expr_7: Expression = {
     <l:list> => Expression::List(l),
     <name:identifier> => Expression::Identifier(name),
     "(" <expr:expr> ")" => expr
+}
+
+props: Vec<Prop> = {
+    <props:props> "," <prop:prop> => append(props, prop),
+    <prop:prop> => vec![prop],
+    () => vec![]
+}
+
+prop: Prop = {
+    <key:identifier> ":" <value:expr> => Prop { key, value }
 }
 
 args: Vec<Expression> = {
@@ -183,6 +194,7 @@ match {
     ")", 
     "null", 
     ",",
+    ":",
     "if",
     "else",
     "{",

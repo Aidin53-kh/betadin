@@ -1,17 +1,31 @@
-fn range(start, end) {
-    let res = [];
-    if start > end {
-        panic("invalid arguments: starts most be lower then end");
-    }
-    
-    while start < end {
-        res = res.push(start);
-        start = start + 1;
-    }
-
-    ret res;
+fn new_user(name, email) {
+    ret {
+        name: name,
+        email: email,
+    };
 }
 
-for i in range(1, 10) {
-    println(i);
-}
+const person = {
+    name: "aidin53",
+    data: {
+        email: "aidn53@gmail.com",
+        password: 123445667,
+    }
+};
+
+let name = person.name;
+let data = person.get("data");
+let email = person.data.get("email");
+let pass_len = person.data.password.to_string().len();
+
+println(name);
+println(data);
+println(email);
+println(pass_len);
+
+println("-------------------------");
+
+let user = new_user("user1", "user1@gmail.com");
+
+println(user.name);
+println(user.email);

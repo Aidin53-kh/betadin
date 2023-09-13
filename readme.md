@@ -3,11 +3,11 @@ todo:
         1. type methods => x.to_string();                                       [pass]
         2. named imports => use std::collections::{map, set};
         3. function declarations                                                [pass]
-      @ 4. const declarations                                                   [current]
+        4. const declarations                                                   [pass]
         5. for statement                                                        [pass]
         6. while statement                                                      [pass]
         7. if statement                                                         [pass]
-        8. object literal
+        8. object literal                                                       [pass]
         9. return statement                                                     [pass]
         10. block scope variables                                               [pass]
         11. arithmatic operators => + - / *                                     [pass]

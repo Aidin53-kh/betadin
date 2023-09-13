@@ -6,6 +6,7 @@ pub mod float;
 pub mod int;
 pub mod list;
 pub mod null;
+pub mod object;
 pub mod string;
 
 pub type Prototypes = HashMap<Type, HashMap<String, Value>>;
@@ -18,6 +19,7 @@ pub fn prototypes() -> Prototypes {
     proto.insert(Type::List, list::list_proto());
     proto.insert(Type::Float, float::float_proto());
     proto.insert(Type::Null, null::null_proto());
+    proto.insert(Type::Object, object::object_proto());
 
     proto
 }

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::ast::{BinaryOpKind, Expression, UnaryOpKind};
 use crate::runtime::std::Prototypes;
-use crate::runtime::value::{Type, Value};
+use crate::runtime::value::{KeyValue, Type, Value};
 use crate::runtime::{DeclType, ScopeStack};
 use crate::Export;
 
@@ -108,18 +108,25 @@ pub fn eval_expression(
                     Some(proto) => match proto.get(&name) {
                         Some(value) => return Ok(value.to_owned()),
                         None => {
+                            if let Value::Object(props) = &obj_value {
+                                let prop = props.into_iter().find(|kv| kv.key == name);
+
+                                if let Some(kv) = prop {
+                                    return Ok(kv.value.clone());
+                                }
+                            }
                             return Err(format!(
-                                "'{}' dose not exist in '{:?}' prototype",
+                                "'{}' dose not exist in '{:?}' prototype (6)",
                                 name,
                                 Type::from(&obj_value)
-                            ))
+                            ));
                         }
                     },
                     None => {
                         return Err(format!(
-                            "the prototype for type {:?} is not implemented",
+                            "the prototype for type {:?} is not implemented (8)",
                             Type::from(&obj_value)
-                        ))
+                        ));
                     }
                 },
                 Expression::Call(expr, args) => match *expr.clone() {
@@ -145,11 +152,18 @@ pub fn eval_expression(
                                 _ => todo!(),
                             },
                             None => {
+                                if let Value::Object(props) = &obj_value {
+                                    let prop = props.into_iter().find(|kv| kv.key == name);
+
+                                    if let Some(kv) = prop {
+                                        return Ok(kv.value.clone());
+                                    }
+                                }
                                 return Err(format!(
-                                    "'{}' dose not exist in '{:?}' prototype",
+                                    "'{}' dose not exist in '{:?}' prototype (3)",
                                     name,
                                     Type::from(&obj_value)
-                                ))
+                                ));
                             }
                         },
                         None => {
@@ -275,6 +289,25 @@ pub fn eval_expression(
             match op {
                 UnaryOpKind::Not => !value,
             }
+        }
+        Expression::Object(props) => {
+            let mut values: Vec<KeyValue> = Vec::new();
+
+            for prop in &props {
+                let value = eval_expression(
+                    scopes,
+                    prop.value.clone(),
+                    modules.clone(),
+                    prototypes.clone(),
+                )?;
+
+                values.push(KeyValue {
+                    key: prop.key.to_string(),
+                    value,
+                });
+            }
+
+            Ok(Value::Object(values))
         }
     }
 }

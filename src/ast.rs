@@ -33,12 +33,19 @@ pub enum Expression {
     String(String),
     Bool(bool),
     List(Vec<Expression>),
+    Object(Vec<Prop>),
     Identifier(String),
     Call(Box<Expression>, Vec<Expression>),
     MethodCall(Box<Expression>, Box<Expression>),
     Index(Box<Expression>, Box<Expression>),
     BinaryOp(Box<Expression>, BinaryOpKind, Box<Expression>),
     UnaryOp(UnaryOpKind, Box<Expression>),
+}
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub struct Prop {
+    pub key: String,
+    pub value: Expression
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
