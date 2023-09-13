@@ -71,6 +71,10 @@ pub fn modules() -> Vec<Export> {
                     value: Value::BuiltInFn(collections::ak_set),
                 }],
             },
+            Export::Module {
+                name: String::from("fs"),
+                exports: vec![],
+            },
         ],
     }]
 }
