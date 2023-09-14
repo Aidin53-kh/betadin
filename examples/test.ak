@@ -1,4 +1,3 @@
-let x = "aidin asd fasfsdfs aidin53 asdfsas";
+let x = "hi aidin";
 
-
-println(x.contains("aidin53"));
+println(x.push(" test"));

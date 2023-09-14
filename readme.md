@@ -39,10 +39,10 @@ v 0.3:
         7. string.to_upper()                                                    [pass]
         8. string.trim()                                                        [pass]
         9. string.contains()                                                    [pass]
-        10. string.is_ascii()
-        11. string.repeat()
-        12. string.replace()
-        13. string.push()
+        10. string.is_ascii()                                                   [pass]
+        11. string.repeat()                                                     [pass]
+        12. string.replace()                                                    [pass]
+        13. string.push()                                                       [pass]
         14. list.rev()
         15. list.join()
         16. list.pop()
