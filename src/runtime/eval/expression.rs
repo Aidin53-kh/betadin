@@ -32,7 +32,8 @@ pub fn eval_expression(
             Ok(Value::List(values))
         }
         Expression::Call(expr, args) => {
-            let value = eval_expression(scopes, *expr, modules.clone(), prototypes.clone())?;
+            let value =
+                eval_expression(scopes, *expr.clone(), modules.clone(), prototypes.clone())?;
 
             match value {
                 Value::BuiltInFn(f) => {
@@ -87,6 +88,21 @@ pub fn eval_expression(
                         Escape::Continue => Err(format!("continue out side of loop (2)")),
                     }
                 }
+                Value::BuiltInMethod(f, this) => {
+                    let mut values = vec![];
+
+                    for arg in args {
+                        let val =
+                            eval_expression(scopes, arg, modules.clone(), prototypes.clone())?;
+                        values.push(val);
+                    }
+                    if let Some(this) = this {
+                        let res = f(values, *this)?;
+                        return Ok(res);
+                    } else {
+                        return Err("dev error".to_string());
+                    }
+                }
                 _ => {
                     return Err(format!(
                         "value of type '{:?}' is not callable (5)",
@@ -103,10 +119,15 @@ pub fn eval_expression(
             let obj_value =
                 eval_expression(scopes, *object.clone(), modules.clone(), prototypes.clone())?;
 
-            match *calle {
+            match *calle.clone() {
                 Expression::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
                     Some(proto) => match proto.get(&name) {
-                        Some(value) => return Ok(value.to_owned()),
+                        Some(value) => {
+                            if let Value::BuiltInMethod(f, _) = value {
+                                return Ok(Value::BuiltInMethod(*f, Some(Box::new(obj_value))));
+                            }
+                            return Ok(value.to_owned());
+                        }
                         None => {
                             if let Value::Object(props) = &obj_value {
                                 let prop = props.into_iter().find(|kv| kv.key == name);
@@ -129,57 +150,60 @@ pub fn eval_expression(
                         ));
                     }
                 },
-                Expression::Call(expr, args) => match *expr.clone() {
-                    Expression::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
-                        Some(proto) => match proto.get(&name) {
-                            Some(value) => match value {
-                                Value::BuiltInMethod(f) => {
-                                    let mut values = vec![];
+                Expression::Call(expr, args) => {
+                    match *expr.clone() {
+                        Expression::Identifier(name) => {
+                            match prototypes.get(&Type::from(&obj_value)) {
+                                Some(proto) => match proto.get(&name) {
+                                    Some(value) => match value {
+                                        Value::BuiltInMethod(f, _) => {
+                                            let mut values = vec![];
 
-                                    for arg in args {
-                                        let val = eval_expression(
-                                            scopes,
-                                            arg,
-                                            modules.clone(),
-                                            prototypes.clone(),
-                                        )?;
-                                        values.push(val);
+                                            for arg in args {
+                                                let val = eval_expression(
+                                                    scopes,
+                                                    arg,
+                                                    modules.clone(),
+                                                    prototypes.clone(),
+                                                )?;
+                                                values.push(val);
+                                            }
+
+                                            let res = f(values, obj_value.to_owned())?;
+                                            return Ok(res);
+                                        }
+                                        _ => todo!(),
+                                    },
+                                    None => {
+                                        if let Value::Object(props) = &obj_value {
+                                            let prop = props.into_iter().find(|kv| kv.key == name);
+                                            if let Some(kv) = prop {
+                                                return Ok(kv.value.to_owned());
+                                            }
+                                        }
+                                        return Err(format!(
+                                            "'{}' dose not exist in '{:?}' prototype (3)",
+                                            name,
+                                            Type::from(&obj_value)
+                                        ));
                                     }
-
-                                    let res = f(values, obj_value.to_owned())?;
-                                    return Ok(res);
+                                },
+                                None => {
+                                    return Err(format!(
+                                        "the prototype for type {:?} is not implemented",
+                                        Type::from(&obj_value)
+                                    ))
                                 }
-                                _ => todo!(),
-                            },
-                            None => {
-                                if let Value::Object(props) = &obj_value {
-                                    let prop = props.into_iter().find(|kv| kv.key == name);
-
-                                    if let Some(kv) = prop {
-                                        return Ok(kv.value.clone());
-                                    }
-                                }
-                                return Err(format!(
-                                    "'{}' dose not exist in '{:?}' prototype (3)",
-                                    name,
-                                    Type::from(&obj_value)
-                                ));
                             }
-                        },
-                        None => {
-                            return Err(format!(
-                                "the prototype for type {:?} is not implemented",
-                                Type::from(&obj_value)
-                            ))
                         }
-                    },
-                    _ => {
-                        return Err(format!(
-                            "value of type {:?} not callable (2)",
-                            Type::from(&obj_value)
-                        ));
+                        _ => {
+                            return Err(format!(
+                                "value of type {:?} not callable (2)",
+                                Type::from(&obj_value)
+                            ));
+                        }
                     }
-                },
+                }
                 Expression::Index(_, _) => todo!(),
                 _ => {
                     return Err(format!(

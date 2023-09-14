@@ -5,8 +5,8 @@ use crate::runtime::value::{Type, Value};
 pub fn list_proto() -> HashMap<String, Value> {
     let mut list_proto = HashMap::new();
 
-    list_proto.insert(String::from("push"), Value::BuiltInMethod(_push));
-    list_proto.insert(String::from("at"), Value::BuiltInMethod(_at));
+    list_proto.insert(String::from("push"), Value::BuiltInMethod(_push, None));
+    list_proto.insert(String::from("at"), Value::BuiltInMethod(_at, None));
 
     list_proto
 }

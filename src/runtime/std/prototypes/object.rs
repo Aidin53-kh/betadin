@@ -6,7 +6,8 @@ pub use super::string::_to_string;
 pub fn object_proto() -> HashMap<String, Value> {
     let mut object_proto = HashMap::new();
 
-    object_proto.insert(String::from("get"), Value::BuiltInMethod(_obj_get));
+    object_proto.insert(String::from("get"), Value::BuiltInMethod(_obj_get, None));
+    object_proto.insert(String::from("keys"), Value::BuiltInMethod(_obj_keys, None));
 
     object_proto
 }
@@ -32,6 +33,28 @@ pub fn _obj_get(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "get() dose not exist in '{:?}' prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _obj_keys(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::Object(props) => {
+            let mut keys: Vec<Value> = vec![];
+
+            for prop in props {
+                keys.push(Value::String(prop.key))
+            }
+        
+            Ok(Value::List(keys))
+        }
+        _ => Err(format!(
+            "keys() dose not exist in {:?} prototype",
             Type::from(&this)
         )),
     }

@@ -89,11 +89,11 @@ expr_4: Expression = {
 }
 
 expr_5: Expression = {
-    <head:expr_5> "." <tail:expr_6> => Expression::MethodCall(Box::new(head), Box::new(tail)),
     expr_6
 }
 
 expr_6: Expression = {
+    <head:expr_6> "." <tail:expr_7> => Expression::MethodCall(Box::new(head), Box::new(tail)),
     <head:expr_6> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
     <expr:expr_6> "(" <args:args> ")" => Expression::Call(Box::new(expr), args),
     "{" <props:props> ","? "}" => Expression::Object(props),

@@ -1,11 +1,8 @@
-fn get_name() {
-    ret "aidin53";
-}
+use std::fs;
 
 const person = {
-    name: get_name
+    name: "aidinr3",
+    getname: print
 };
 
-let name = person.name();
-
-println(name());
+fs.write("aidin.cpp", "this is cpp file");

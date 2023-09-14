@@ -7,9 +7,12 @@ use super::list::_at;
 pub fn string_proto() -> HashMap<String, Value> {
     let mut string_proto = HashMap::new();
 
-    string_proto.insert(String::from("len"), Value::BuiltInMethod(_len));
-    string_proto.insert(String::from("to_string"), Value::BuiltInMethod(_to_string));
-    string_proto.insert(String::from("at"), Value::BuiltInMethod(_at));
+    string_proto.insert(String::from("len"), Value::BuiltInMethod(_len, None));
+    string_proto.insert(
+        String::from("to_string"),
+        Value::BuiltInMethod(_to_string, None),
+    );
+    string_proto.insert(String::from("at"), Value::BuiltInMethod(_at, None));
 
     string_proto
 }
