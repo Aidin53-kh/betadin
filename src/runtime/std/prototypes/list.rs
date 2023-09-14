@@ -2,14 +2,22 @@ use std::collections::HashMap;
 
 use crate::runtime::value::{Type, Value};
 
-use super::string::{_len, _to_string};
+use super::string::{_contains, _len, _to_string};
 
 pub fn list_proto() -> HashMap<String, Value> {
     let mut list_proto = HashMap::new();
 
     list_proto.insert(String::from("push"), Value::BuiltInMethod(_push, None));
+    list_proto.insert(String::from("pop"), Value::BuiltInMethod(_pop, None));
     list_proto.insert(String::from("at"), Value::BuiltInMethod(_at, None));
     list_proto.insert(String::from("len"), Value::BuiltInMethod(_len, None));
+    list_proto.insert(String::from("rev"), Value::BuiltInMethod(_rev, None));
+    list_proto.insert(String::from("join"), Value::BuiltInMethod(_join, None));
+    list_proto.insert(String::from("clear"), Value::BuiltInMethod(_clear, None));
+    list_proto.insert(
+        String::from("contains"),
+        Value::BuiltInMethod(_contains, None),
+    );
     list_proto.insert(
         String::from("to_string"),
         Value::BuiltInMethod(_to_string, None),
@@ -62,21 +70,96 @@ pub fn _push(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         return Err(format!("expected 1 argument, but found {}", vs.len()));
     }
 
-    match vs.get(0) {
-        Some(value) => match this {
-            Value::List(mut list) => {
-                list.push(value.to_owned());
-                Ok(Value::List(list.to_vec()))
+    match this {
+        Value::List(list) => match vs.get(0) {
+            Some(value) => {
+                let mut new_list = list;
+                new_list.push(value.clone());
+                return Ok(Value::List(new_list));
             }
-            _ => {
-                return Err(format!(
-                    "push() dose not exist in '{:?}' prototype",
-                    Type::from(value)
-                ))
-            }
+            None => return Err(format!("expected 1 argument, but found {}", vs.len())),
         },
-        None => {
-            return Err(format!("expected 1 argument, but found {}", vs.len()));
+        _ => {
+            return Err(format!(
+                "push() dose not exist in '{:?}' prototype",
+                Type::from(&this)
+            ))
         }
+    }
+}
+
+pub fn _pop(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::List(list) => {
+            let mut new_list = list;
+            new_list.pop();
+            return Ok(Value::List(new_list));
+        }
+        _ => {
+            return Err(format!(
+                "push() dose not exist in '{:?}' prototype",
+                Type::from(&this)
+            ))
+        }
+    }
+}
+
+pub fn _rev(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::List(list) => Ok(Value::List(list.into_iter().rev().collect())),
+        _ => Err(format!(
+            "rev() dose not exist in {:?} prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _join(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 1 || vs.len() < 1 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::List(list) => match vs.get(0) {
+            Some(value) => match value {
+                Value::String(s) => {
+                    let mut string_list: Vec<String> = vec![];
+                    for i in list {
+                        string_list.push(i.to_string());
+                    }
+                    let joined = string_list.join(s);
+                    return Ok(Value::String(joined));
+                }
+                _ => return Err(format!("the first argument most be a string")),
+            },
+            None => Err(format!("expected 1 argument, but found {}", vs.len())),
+        },
+        _ => Err(format!(
+            "split() dose not exist in '{:?}' prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _clear(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::List(_) => Ok(Value::List(vec![])),
+        Value::Object(_) => Ok(Value::Object(vec![])),
+        _ => Err(format!(
+            "rev() dose not exist in {:?} prototype",
+            Type::from(&this)
+        )),
     }
 }

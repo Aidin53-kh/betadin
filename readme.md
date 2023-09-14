@@ -1,4 +1,4 @@
-v 0.1:
+v 0.1.0:
         1. variable declerations                                                [pass]
         2. arithmatic operators => + - / *                                      [pass]
         3. relational operators => == > < !=                                    [pass]
@@ -13,7 +13,7 @@ v 0.1:
         12. function calls                                                      [pass]
         13. variable assignment                                                 [pass]
 
-v 0.2:
+v 0.2.0:
         1. type methods => x.to_string();                                       [pass]
         2. named imports => use std::collections::{map, set};                   [faild]
         3. function declarations                                                [pass]
@@ -28,8 +28,17 @@ v 0.2:
         12. comments => # only single line comment                              [pass]     
         13. break statement                                                     [pass]
         14. continue statement                                                  [pass]
+        15. .to_string() in all prototypes                                      [pass]
+        16. list.len()                                                          [pass]
+        17. list.push()                                                         [pass]
+        18. list.at()                                                           [pass]
+        19. string.at()                                                         [pass]
+        20. string.len()                                                        [pass]
+        21. int.pow()                                                           [pass]
+        22. float.pow()                                                         [pass]
+        23. obj.get()                                                           [pass]
 
-v 0.3:
+v 0.3.0:
         1. std::fs module                                                       [pass]
         2. module imports as object                                             [pass]
         3. typeof operator                                                      [pass]
@@ -43,19 +52,22 @@ v 0.3:
         11. string.repeat()                                                     [pass]
         12. string.replace()                                                    [pass]
         13. string.push()                                                       [pass]
-        14. list.rev()
-        15. list.join()
-        16. list.pop()
-        17. list.find()
-        18. list.filter()
-        19. list.map()
-        20. list.slice()
-        21. list.containes()
-        22. list.sort()
-        23. list.clear()
-        24. obj.values()
-        25. obj.contains()
-        26. obj.set()
-        27. obj.remove()
-        28. obj.clear()
+        14. list.rev()                                                          [pass]
+        15. list.join()                                                         [pass]
+        16. list.pop()                                                          [pass]
+        17. list.contains()                                                     [pass]
+        18. list.clear()                                                        [pass]
+        19. obj.values()                                                        [pass]
+        20. obj.contains()                                                      [pass]
+        21. obj.set()                                                           [pass]
+        22. obj.remove()                                                        [pass]
+        23. obj.clear()                                                         [pass]
+        24. fs::read()                                                          [pass]
+        25. fs::write()                                                         [pass]
+        26. fs::read_dir()                                                      [pass]
+        27. fs::remove()                                                        [pass]
+        28. fs::rename()                                                        [pass]
+        29. fs::remove_dir()                                                    [pass]
 
+v 0.4.0
+        1. 

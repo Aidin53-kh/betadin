@@ -174,8 +174,27 @@ pub fn _contains(vs: Vec<Value>, this: Value) -> Result<Value, String> {
             },
             None => Err(format!("expected 1 argument, but found {}", vs.len())),
         },
+        Value::List(list) => match vs.get(0) {
+            Some(value) => Ok(Value::Bool(list.contains(&value))),
+            None => Err(format!("expected 1 argument, but found {}", vs.len())),
+        },
+        Value::Object(obj) => match vs.get(0) {
+            Some(value) => match value {
+                Value::String(s) => {
+                    let mut keys: Vec<Value> = vec![];
+
+                    for prop in obj {
+                        keys.push(Value::String(prop.key))
+                    }
+
+                    Ok(Value::Bool(keys.contains(&Value::String(s.to_string()))))
+                }
+                _ => return Err(format!("the first argument most be a string")),
+            },
+            None => Err(format!("expected 1 argument, but found {}", vs.len())),
+        },
         _ => Err(format!(
-            "split() dose not exist in '{:?}' prototype",
+            "contains() dose not exist in '{:?}' prototype",
             Type::from(&this)
         )),
     }
