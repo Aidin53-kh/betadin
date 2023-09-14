@@ -13,6 +13,12 @@ pub fn string_proto() -> HashMap<String, Value> {
         Value::BuiltInMethod(_to_string, None),
     );
     string_proto.insert(String::from("at"), Value::BuiltInMethod(_at, None));
+    string_proto.insert(String::from("chars"), Value::BuiltInMethod(_chars, None));
+    string_proto.insert(String::from("split"), Value::BuiltInMethod(_split, None));
+    string_proto.insert(String::from("to_upper"), Value::BuiltInMethod(_upper, None));
+    string_proto.insert(String::from("to_lower"), Value::BuiltInMethod(_lower, None));
+    string_proto.insert(String::from("trim"), Value::BuiltInMethod(_trim, None));
+    string_proto.insert(String::from("contains"), Value::BuiltInMethod(_contains, None));
 
     string_proto
 }
@@ -48,6 +54,115 @@ pub fn _to_string(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         }
         _ => Err(format!(
             "to_string dose not exist in {:?} prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _chars(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::String(s) => {
+            let mut chars: Vec<Value> = vec![];
+            for char in s.chars() {
+                chars.push(Value::String(char.to_string()));
+            }
+            Ok(Value::List(chars))
+        }
+        _ => Err(format!(
+            "to_string dose not exist in {:?} prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _split(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 1 || vs.len() < 1 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::String(s) => match vs.get(0) {
+            Some(value) => match value {
+                Value::String(val) => {
+                    let mut res: Vec<Value> = vec![];
+                    for i in s.split(val) {
+                        res.push(Value::String(i.to_string()));
+                    }
+
+                    return Ok(Value::List(res));
+                }
+                _ => return Err(format!("the first argument most be a string")),
+            },
+            None => Err(format!("expected 1 argument, but found {}", vs.len())),
+        },
+        _ => Err(format!(
+            "split() dose not exist in '{:?}' prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _upper(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::String(s) => Ok(Value::String(s.to_uppercase())),
+        _ => Err(format!(
+            "upper() dose not exist in {:?} prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _lower(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::String(s) => Ok(Value::String(s.to_lowercase())),
+        _ => Err(format!(
+            "lower() dose not exist in {:?} prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _trim(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::String(s) => Ok(Value::String(s.trim().to_string())),
+        _ => Err(format!(
+            "trim() dose not exist in {:?} prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _contains(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 1 || vs.len() < 1 {
+        return Err(format!("expected 1 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::String(s) => match vs.get(0) {
+            Some(value) => match value {
+                Value::String(val) => return Ok(Value::Bool(s.contains(val))),
+                _ => return Err(format!("the first argument most be a string")),
+            },
+            None => Err(format!("expected 1 argument, but found {}", vs.len())),
+        },
+        _ => Err(format!(
+            "split() dose not exist in '{:?}' prototype",
             Type::from(&this)
         )),
     }

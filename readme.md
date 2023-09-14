@@ -32,17 +32,17 @@ v 0.2:
 v 0.3:
         1. std::fs module                                                       [pass]
         2. module imports as object                                             [pass]
-        3. typeof operator
-        4. string.chars()
-        5. string.slice()
-        6. string.split()
-        7. string.to_lower()
-        8. string.to_upper()
-        9. string.trim()
-        10. string.contains()
-        11. string.is_ascii()
-        12. string.repeat()
-        13. string..replace()
+        3. typeof operator                                                      [pass]
+        4. string.chars()                                                       [pass]
+        5. string.split()                                                       [pass]
+        6. string.to_lower()                                                    [pass]
+        7. string.to_upper()                                                    [pass]
+        8. string.trim()                                                        [pass]
+        9. string.contains()                                                    [pass]
+        10. string.is_ascii()
+        11. string.repeat()
+        12. string.replace()
+        13. string.push()
         14. list.rev()
         15. list.join()
         16. list.pop()

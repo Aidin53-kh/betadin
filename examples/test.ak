@@ -1,5 +1,4 @@
-let x = 4.to_string();
+let x = "aidin asd fasfsdfs aidin53 asdfsas";
 
-let t = typeof x;
 
-println(t);
+println(x.contains("aidin53"));
