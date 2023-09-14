@@ -30,6 +30,32 @@ v 0.2:
         14. continue statement                                                  [pass]
 
 v 0.3:
-        1. builtin fs module                                                    [pass]
+        1. std::fs module                                                       [pass]
         2. module imports as object                                             [pass]
+        3. typeof operator
+        4. string.chars()
+        5. string.slice()
+        6. string.split()
+        7. string.to_lower()
+        8. string.to_upper()
+        9. string.trim()
+        10. string.contains()
+        11. string.is_ascii()
+        12. string.repeat()
+        13. string..replace()
+        14. list.rev()
+        15. list.join()
+        16. list.pop()
+        17. list.find()
+        18. list.filter()
+        19. list.map()
+        20. list.slice()
+        21. list.containes()
+        22. list.sort()
+        23. list.clear()
+        24. obj.values()
+        25. obj.contains()
+        26. obj.set()
+        27. obj.remove()
+        28. obj.clear()
 

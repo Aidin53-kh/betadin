@@ -1,12 +1,5 @@
-use std::math::pow;
-use std::collections::set;
-use std::fs;
+let x = 4.to_string();
 
-for file in fs.read_dir("./examples") {
-    if file == "test.ak" {
-        let content = fs.read("./examples/test.ak");
+let t = typeof x;
 
-        println(content);
-    }
-}
-
+println(t);

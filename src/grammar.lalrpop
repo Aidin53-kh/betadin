@@ -82,6 +82,7 @@ expr_3: Expression = {
 
 expr_4: Expression = {
     "!" <expr:expr_5> => Expression::UnaryOp(UnaryOpKind::Not, Box::new(expr)),   
+    "typeof" <expr:expr_5> => Expression::UnaryOp(UnaryOpKind::Typeof, Box::new(expr)),
     
     <lhs:expr_4> "*" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Mul, Box::new(rhs)),
     <lhs:expr_4> "/" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Div, Box::new(rhs)),
@@ -206,7 +207,8 @@ match {
     "break",
     "continue",
     "while",
-    "const"
+    "const",
+    "typeof"
 } else {
     " " => {},
     "\n" => {},

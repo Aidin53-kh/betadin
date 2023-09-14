@@ -87,4 +87,5 @@ pub enum BinaryOpKind {
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum UnaryOpKind {
     Not,
+    Typeof
 }
