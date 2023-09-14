@@ -195,7 +195,11 @@ pub fn apply_imports(
                                 });
                             }
                         }
-                        scopes.declare(arg.to_string(), Value::Object(obj), DeclType::Immutable)?;
+                        scopes.declare_builtin(
+                            arg.to_string(),
+                            Value::Object(obj),
+                            DeclType::Immutable,
+                        )?;
                     } else {
                         last = exports.to_owned();
                     }
@@ -204,7 +208,11 @@ pub fn apply_imports(
                     if let Some(_) = args.get(i + 1) {
                         return Err(format!("{} is not a module", arg));
                     } else {
-                        scopes.declare(arg.to_string(), value.to_owned(), DeclType::Immutable)?;
+                        scopes.declare_builtin(
+                            arg.to_string(),
+                            value.to_owned(),
+                            DeclType::Immutable,
+                        )?;
                     }
                 }
             }

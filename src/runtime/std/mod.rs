@@ -1,12 +1,10 @@
-
-
 use crate::runtime::value::Value;
 use crate::Export;
 
 pub mod collections;
+pub mod fs;
 pub mod math;
 pub mod prototypes;
-pub mod fs;
 
 pub use prototypes::{prototypes, Prototypes};
 
@@ -94,6 +92,10 @@ pub fn modules() -> Vec<Export> {
                         value: Value::BuiltInFn(fs::_fs_remove_dir),
                     },
                 ],
+            },
+            Export::Module {
+                name: String::from("system"),
+                exports: vec![],
             },
         ],
     }]

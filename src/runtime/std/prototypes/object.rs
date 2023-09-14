@@ -64,17 +64,29 @@ pub fn _obj_set(vs: Vec<Value>, this: Value) -> Result<Value, String> {
                 Value::String(arg1) => match vs.get(1) {
                     Some(arg2) => {
                         let mut new_obj: Vec<KeyValue> = vec![];
-                        for prop in obj {
+                        let mut keys: Vec<String> = vec![];
+
+                        for prop in &obj {
+                            keys.push(prop.key.to_string());
+                        }
+
+                        if !keys.contains(arg1) {
+                            new_obj.push(KeyValue {
+                                key: arg1.to_string(),
+                                value: arg2.clone(),
+                            });
+                        }
+                        
+                        for prop in &obj {
                             if &prop.key == arg1 {
                                 new_obj.push(KeyValue {
-                                    key: prop.key,
+                                    key: prop.key.to_string(),
                                     value: arg2.clone(),
                                 });
                             } else {
-                                new_obj.push(prop);
+                                new_obj.push(prop.clone());
                             }
                         }
-
                         Ok(Value::Object(new_obj))
                     }
                     None => Err(format!("expected 2 argument, but found {}", vs.len())),

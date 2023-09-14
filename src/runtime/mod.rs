@@ -41,6 +41,15 @@ impl ScopeStack {
 
         if let Value::Object(props) = &value {
             let obj_proto = object_proto();
+            let mut keys: Vec<String> = vec![];
+
+            for prop in props {
+                if keys.contains(&prop.key) {
+                    return Err(format!("duplicate property '{}'", prop.key));
+                }
+                keys.push(prop.key.clone());
+            }
+
             let res = props
                 .into_iter()
                 .find(|kv| obj_proto.get(&kv.key).is_some());
@@ -49,6 +58,22 @@ impl ScopeStack {
                 return Err(format!("property '{}' is reserved in object prototype", kv.key));
             }
         }
+
+        if current_scope.contains_key(&name) {
+            return Err(format!("'{}' already define in this scope", name));
+        }
+        current_scope.insert(name, (value, decl_type));
+
+        Ok(())
+    }
+
+    fn declare_builtin(&mut self, name: String, value: Value, decl_type: DeclType) -> Result<(), String> {
+        let mut current_scope = self
+            .0
+            .last()
+            .expect("`ScopeStack` stack shouldn't be empty")
+            .lock()
+            .unwrap();
 
         if current_scope.contains_key(&name) {
             return Err(format!("'{}' already define in this scope", name));
