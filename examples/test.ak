@@ -1,11 +1,11 @@
-# use std::fs::write;
+fn get_name() {
+    ret "aidin53";
+}
 
-# const content = "my name is aidin53";
+const person = {
+    name: get_name
+};
 
-# write("./examples/fs.ak", content);
+let name = person.name();
 
-# use std::fs::read_file;
-
-# let file = read_file("./examples/test.ak");
-
-# println(file.len());
+println(name());

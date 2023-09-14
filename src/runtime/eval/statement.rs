@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::expression::eval_expression;
 use crate::ast::Statement;
 use crate::runtime::std::Prototypes;
-use crate::runtime::value::Value;
+use crate::runtime::value::{KeyValue, Value};
 use crate::runtime::{DeclType, ScopeStack};
 use crate::Export;
 
@@ -186,15 +186,16 @@ pub fn apply_imports(
             match m {
                 Export::Module { name: _, exports } => {
                     if let None = args.get(i + 1) {
+                        let mut obj: Vec<KeyValue> = vec![];
                         for export in exports.iter() {
                             if let Export::Item { name, value } = export {
-                                scopes.declare(
-                                    name.to_string(),
-                                    value.clone(),
-                                    DeclType::Immutable,
-                                )?;
+                                obj.push(KeyValue {
+                                    key: name.to_string(),
+                                    value: value.clone(),
+                                });
                             }
                         }
+                        scopes.declare(arg.to_string(), Value::Object(obj), DeclType::Immutable)?;
                     } else {
                         last = exports.to_owned();
                     }
