@@ -2,11 +2,18 @@ use std::collections::HashMap;
 
 use crate::runtime::value::{Type, Value};
 
+use super::string::{_len, _to_string};
+
 pub fn list_proto() -> HashMap<String, Value> {
     let mut list_proto = HashMap::new();
 
     list_proto.insert(String::from("push"), Value::BuiltInMethod(_push, None));
     list_proto.insert(String::from("at"), Value::BuiltInMethod(_at, None));
+    list_proto.insert(String::from("len"), Value::BuiltInMethod(_len, None));
+    list_proto.insert(
+        String::from("to_string"),
+        Value::BuiltInMethod(_to_string, None),
+    );
 
     list_proto
 }
@@ -34,7 +41,7 @@ pub fn _at(vs: Vec<Value>, this: Value) -> Result<Value, String> {
             Some(value) => match value {
                 Value::Int(i) => {
                     if let Some(val) = l.get(*i as usize) {
-                        return Ok(Value::from(val))
+                        return Ok(Value::from(val));
                     } else {
                         return Err(format!("index out of bounds"));
                     }

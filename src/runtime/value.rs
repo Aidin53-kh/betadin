@@ -38,7 +38,7 @@ pub enum Type {
     Object,
 }
 
-fn value_list(values: Vec<Value>) -> String {
+pub fn value_list(values: Vec<Value>) -> String {
     let mut res: String = String::new();
 
     for (i, value) in values.iter().enumerate() {

@@ -41,7 +41,7 @@ pub fn _fs_write_file(vs: Vec<Value>) -> Result<Value, String> {
                             Err(e) => return Err(e.to_string()),
                         }
                     }
-                    _ => return Err(format!("the first argument most be a string")),
+                    _ => return Err(format!("the seconde argument most be a string")),
                 },
                 None => return Err(format!("expected 2 argument, but found {}", vs.len())),
             },

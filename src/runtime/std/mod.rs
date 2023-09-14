@@ -6,7 +6,6 @@ use crate::Export;
 pub mod collections;
 pub mod math;
 pub mod prototypes;
-pub mod string;
 pub mod fs;
 
 pub use prototypes::{prototypes, Prototypes};
@@ -59,13 +58,6 @@ pub fn modules() -> Vec<Export> {
                         value: Value::BuiltInFn(math::ak_pow),
                     },
                 ],
-            },
-            Export::Module {
-                name: String::from("string"),
-                exports: vec![Export::Item {
-                    name: String::from("len"),
-                    value: Value::BuiltInFn(string::ak_len),
-                }],
             },
             Export::Module {
                 name: String::from("collections"),

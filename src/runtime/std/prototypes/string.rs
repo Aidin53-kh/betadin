@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::runtime::value::{Type, Value};
+use crate::runtime::value::{value_list, Type, Value};
 
 use super::list::_at;
 
@@ -42,6 +42,10 @@ pub fn _to_string(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         Value::Int(n) => Ok(Value::String(n.to_string())),
         Value::Float(n) => Ok(Value::String(n.to_string())),
         Value::String(s) => Ok(Value::String(s.to_string())),
+        Value::List(l) => {
+            let list = value_list(l.to_vec());
+            Ok(Value::String("[".to_string() + &list + &"]"))
+        }
         _ => Err(format!(
             "to_string dose not exist in {:?} prototype",
             Type::from(&this)

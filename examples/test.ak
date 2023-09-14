@@ -1,8 +1,12 @@
+use std::math::pow;
+use std::collections::set;
 use std::fs;
 
-const person = {
-    name: "aidinr3",
-    getname: print
-};
+for file in fs.read_dir("./examples") {
+    if file == "test.ak" {
+        let content = fs.read("./examples/test.ak");
 
-fs.write("aidin.cpp", "this is cpp file");
+        println(content);
+    }
+}
+
