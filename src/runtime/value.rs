@@ -39,13 +39,28 @@ pub enum Type {
 }
 
 pub fn value_list(values: Vec<Value>) -> String {
-    let mut res: String = String::new();
+    let mut res = String::new();
 
     for (i, value) in values.iter().enumerate() {
         if i != 0 {
             res.push_str(", ");
         }
         res.push_str(&value.to_string());
+    }
+
+    res
+}
+
+pub fn key_value(obj: Vec<KeyValue>) -> String {
+    let mut res = String::new();
+
+    for prop in obj {
+        res.push('\t');
+        res.push_str(&prop.key);
+        res.push_str(": ");
+        res.push_str(&prop.value.to_string());
+        res.push(',');
+        res.push('\n');
     }
 
     res
@@ -105,11 +120,11 @@ impl Display for Value {
             Value::Float(n) => write!(f, "{}", n),
             Value::String(s) => write!(f, "{}", s),
             Value::Bool(b) => write!(f, "{}", b),
-            Value::BuiltInFn(_) => write!(f, "function"),
+            Value::BuiltInFn(_) => write!(f, "fn"),
             Value::List(v) => write!(f, "[{}]", value_list(v.to_vec())),
-            Value::BuiltInMethod(_, _) => write!(f, "function"),
-            Value::Func(_, _) => write!(f, "function"),
-            Value::Object(_) => write!(f, "{{ ... }}"),
+            Value::BuiltInMethod(_, _) => write!(f, "fn"),
+            Value::Func(_, _) => write!(f, "fn"),
+            Value::Object(obj) => write!(f, "{{\n{}}}", key_value(obj.to_vec())),
         }
     }
 }
