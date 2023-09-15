@@ -24,7 +24,10 @@ statement: Statement = {
     const_statement,
 }
 
-use_statement: Statement = "use" <args:import_args> ";" => Statement::ImportStatement(args);
+use_statement: Statement = {
+    "use" <args:import_args> ";" => Statement::ImportStatement(args, None),
+    "use" <args:import_args> "::" "{" <names:params> "}" ";" => Statement::ImportStatement(args, Some(names))
+};
 
 let_statement: Statement = "let" <name:identifier> "=" <rhs:expr> ";" => Statement::LetStatement(name, rhs);
 const_statement: Statement = "const" <name:identifier> "=" <rhs:expr> ";" => Statement::ConstStatement(name, rhs);

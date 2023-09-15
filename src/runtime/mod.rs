@@ -76,7 +76,7 @@ impl ScopeStack {
             .unwrap();
 
         if current_scope.contains_key(&name) {
-            return Err(format!("'{}' already define in this scope", name));
+            return Err(format!("'{}' already define in this scope (2)", name));
         }
         current_scope.insert(name, (value, decl_type));
 

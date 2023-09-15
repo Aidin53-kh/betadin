@@ -33,8 +33,8 @@ pub fn eval_statement(
             let value = eval_expression(scopes, rhs, modules, prototypes)?;
             scopes.declare(name, value, DeclType::Immutable)?;
         }
-        Statement::ImportStatement(args) => {
-            apply_imports(scopes, modules, args)?;
+        Statement::ImportStatement(args, items) => {
+            apply_imports(scopes, modules, args, items)?;
         }
         Statement::AssignmentStatement(name, rhs) => {
             let value = eval_expression(scopes, rhs, modules, prototypes)?;
@@ -171,6 +171,7 @@ pub fn apply_imports(
     scopes: &mut ScopeStack,
     modules: Vec<Export>,
     args: Vec<String>,
+    items: Option<Vec<String>>,
 ) -> Result<(), String> {
     let mut last = modules;
 
@@ -186,25 +187,60 @@ pub fn apply_imports(
             match m {
                 Export::Module { name: _, exports } => {
                     if let None = args.get(i + 1) {
-                        let mut obj: Vec<KeyValue> = vec![];
-                        for export in exports.iter() {
-                            if let Export::Item { name, value } = export {
-                                obj.push(KeyValue {
-                                    key: name.to_string(),
-                                    value: value.clone(),
-                                });
+                        if let Some(items) = &items {
+                            for export in exports.iter() {
+                                match export {
+                                    Export::Module { name: n1, exports } => {
+                                        let mut obj: Vec<KeyValue> = vec![];
+                                        for export in exports.iter() {
+                                            if let Export::Item { name: n, value } = export {
+                                                obj.push(KeyValue {
+                                                    key: n.to_string(),
+                                                    value: value.clone(),
+                                                });
+                                            }
+                                        }
+                                        scopes.declare_builtin(
+                                            n1.to_string(),
+                                            Value::Object(obj),
+                                            DeclType::Immutable,
+                                        )?;
+                                    }
+                                    Export::Item { name, value } => {
+                                        if items.contains(&name) {
+                                            scopes.declare_builtin(
+                                                name.to_string(),
+                                                value.clone(),
+                                                DeclType::Immutable,
+                                            )?;
+                                        }
+                                    }
+                                }
                             }
+                        } else {
+                            let mut obj: Vec<KeyValue> = vec![];
+                            for export in exports.iter() {
+                                if let Export::Item { name, value } = export {
+                                    obj.push(KeyValue {
+                                        key: name.to_string(),
+                                        value: value.clone(),
+                                    });
+                                }
+                            }
+                            scopes.declare_builtin(
+                                arg.to_string(),
+                                Value::Object(obj),
+                                DeclType::Immutable,
+                            )?;
                         }
-                        scopes.declare_builtin(
-                            arg.to_string(),
-                            Value::Object(obj),
-                            DeclType::Immutable,
-                        )?;
                     } else {
                         last = exports.to_owned();
                     }
                 }
-                Export::Item { name: _, value } => {
+                Export::Item { name, value } => {
+                    if let Some(_) = items {
+                        return Err(format!("{} is not a module", name));
+                    }
                     if let Some(_) = args.get(i + 1) {
                         return Err(format!("{} is not a module", arg));
                     } else {

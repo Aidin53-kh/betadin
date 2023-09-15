@@ -15,7 +15,7 @@ pub enum Statement {
     ConstStatement(String, Expression),
     ExpressionStatement(Expression),
     AssignmentStatement(String, Expression),
-    ImportStatement(Vec<String>),
+    ImportStatement(Vec<String>, Option<Vec<String>>),
     IfStatement(Vec<Branch>, Option<Block>),
     ReturnStatement(Expression),
     FnStatement(String, Vec<String>, Block),
@@ -45,7 +45,7 @@ pub enum Expression {
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Prop {
     pub key: String,
-    pub value: Expression
+    pub value: Expression,
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -87,5 +87,5 @@ pub enum BinaryOpKind {
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum UnaryOpKind {
     Not,
-    Typeof
+    Typeof,
 }

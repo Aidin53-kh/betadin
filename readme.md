@@ -70,6 +70,7 @@ v 0.3.0:
         29. fs::remove_dir()                                                    [pass]
 
 v 0.4.0
+        1. named imports => use std::collections::{map, set};                   [pass]
         1. new std::system module                                               [pass]
         2. new std::env module                                                  [pass]
         4. system::platform()                                                   [pass]
