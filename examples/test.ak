@@ -1,20 +1,20 @@
+use std::env;
 use std::fs;
 
-let content = fs.read("readme.md");
+let args = env.args();
 
-const person = {
-    name: "aidin",
-    age: 20,
-    other: {
-        address: "joben",
-        email: "aidin@gmail.com" 
-    }
-};
-
-fn rev_str(str) {
-    ret str.chars().rev().join("");
+if args.len() < 3 {
+    panic("invalid args");
 }
 
-println(
-    content
-);
+let path = args.at(1);
+let target_line = args.at(2).to_numeric() - 1;
+
+let lines = fs.read(path).lines();
+
+if lines.len() < target_line {
+    panic("line " + (target_line + 1) + " not found");
+}
+
+println(lines[target_line]);
+

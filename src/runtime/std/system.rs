@@ -1,5 +1,5 @@
-use std::env;
 use crate::runtime::value::Value;
+use std::env;
 
 pub fn _platform(vs: Vec<Value>) -> Result<Value, String> {
     if vs.len() > 0 {
@@ -79,4 +79,20 @@ pub fn _processes(vs: Vec<Value>) -> Result<Value, String> {
 
     let processes = sys_info::proc_total().unwrap();
     Ok(Value::Int(processes as i32))
+}
+
+pub fn _arch(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    Ok(Value::String(env::consts::ARCH.to_string()))
+}
+
+pub fn _family(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    Ok(Value::String(env::consts::FAMILY.to_string()))
 }

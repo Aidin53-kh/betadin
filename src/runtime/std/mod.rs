@@ -1,4 +1,4 @@
-use std::vec;
+use std::env;
 
 use crate::runtime::value::Value;
 use crate::Export;
@@ -135,12 +135,35 @@ pub fn modules() -> Vec<Export> {
                         name: String::from("processes"),
                         value: Value::BuiltInFn(system::_processes),
                     },
+                    Export::Item {
+                        name: String::from("arch"),
+                        value: Value::BuiltInFn(system::_arch),
+                    },
+                    Export::Item {
+                        name: String::from("family"),
+                        value: Value::BuiltInFn(system::_family),
+                    },
                 ],
             },
             Export::Module {
                 name: String::from("env"),
-                exports: vec![],
+                exports: vec![Export::Item {
+                    name: String::from("args"),
+                    value: Value::BuiltInFn(_env_args),
+                }],
             },
         ],
     }]
+}
+
+pub fn _env_args(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let mut args = Vec::new();
+    for arg in env::args() {
+        args.push(Value::String(arg))
+    }
+    Ok(Value::List(args))
 }

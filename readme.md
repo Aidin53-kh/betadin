@@ -71,7 +71,7 @@ v 0.3.0:
 
 v 0.4.0
         1. new std::system module                                               [pass]
-        2. new std::env module
+        2. new std::env module                                                  [pass]
         4. system::platform()                                                   [pass]
         5. system::free_mem()                                                   [pass]
         6. system::total_mem()                                                  [pass]
@@ -80,4 +80,9 @@ v 0.4.0
         9. system::cpus()                                                       [pass]
         10. system::cpu_speed()                                                 [pass]
         11. system::version()                                                   [pass]
-        12. system::processes()                                                 [pass]
+        12. system::processes()                                                 [pass]     
+        13. system.arch()                                                       [pass]
+        14. system.family()                                                     [pass]
+        15. env::args()                                                         [pass]
+        16. string.lines()                                                      [pass]
+        17. string.to_numeric()                                                 [pass]

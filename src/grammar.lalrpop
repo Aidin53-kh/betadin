@@ -76,7 +76,7 @@ expr_2: Expression = {
 
 expr_3: Expression = {
     <lhs:expr_3> "+" <rhs:expr_4> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Add, Box::new(rhs)),
-    <lhs:expr_3> "_" <rhs:expr_4> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Sub, Box::new(rhs)),
+    <lhs:expr_3> "-" <rhs:expr_4> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Sub, Box::new(rhs)),
     expr_4
 }
 

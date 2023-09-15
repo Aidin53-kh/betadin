@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use crate::runtime::value::{value_list, Type, Value};
 
@@ -18,6 +19,11 @@ pub fn string_proto() -> HashMap<String, Value> {
     string_proto.insert(String::from("to_upper"), Value::BuiltInMethod(_upper, None));
     string_proto.insert(String::from("to_lower"), Value::BuiltInMethod(_lower, None));
     string_proto.insert(String::from("trim"), Value::BuiltInMethod(_trim, None));
+    string_proto.insert(String::from("lines"), Value::BuiltInMethod(_lines, None));
+    string_proto.insert(
+        String::from("to_numeric"),
+        Value::BuiltInMethod(_to_numeric, None),
+    );
     string_proto.insert(
         String::from("is_ascii"),
         Value::BuiltInMethod(_is_ascii, None),
@@ -84,6 +90,47 @@ pub fn _chars(vs: Vec<Value>, this: Value) -> Result<Value, String> {
                 chars.push(Value::String(char.to_string()));
             }
             Ok(Value::List(chars))
+        }
+        _ => Err(format!(
+            "to_string dose not exist in {:?} prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _to_numeric(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::String(s) => {
+            let res = i32::from_str(&s);
+
+            match res {
+                Ok(n) => Ok(Value::Int(n)),
+                Err(e) => Err(e.to_string()),
+            }
+        }
+        _ => Err(format!(
+            "to_string dose not exist in {:?} prototype",
+            Type::from(&this)
+        )),
+    }
+}
+
+pub fn _lines(vs: Vec<Value>, this: Value) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 argument, but found {}", vs.len()));
+    }
+
+    match this {
+        Value::String(s) => {
+            let mut lines = Vec::new();
+            for line in s.lines() {
+                lines.push(Value::String(line.to_string()));
+            }
+            Ok(Value::List(lines))
         }
         _ => Err(format!(
             "to_string dose not exist in {:?} prototype",
