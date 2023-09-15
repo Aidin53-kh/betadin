@@ -1,3 +1,5 @@
+use std::env;
+
 use crate::runtime::value::Value;
 use crate::Export;
 
@@ -95,8 +97,125 @@ pub fn modules() -> Vec<Export> {
             },
             Export::Module {
                 name: String::from("system"),
-                exports: vec![],
+                exports: vec![
+                    Export::Item {
+                        name: String::from("platform"),
+                        value: Value::BuiltInFn(_platform),
+                    },
+                    Export::Item {
+                        name: String::from("free_mem"),
+                        value: Value::BuiltInFn(_free_mem),
+                    },
+                    Export::Item {
+                        name: String::from("total_mem"),
+                        value: Value::BuiltInFn(_total_mem),
+                    },
+                    Export::Item {
+                        name: String::from("total_disk"),
+                        value: Value::BuiltInFn(_total_disk),
+                    },
+                    Export::Item {
+                        name: String::from("free_disk"),
+                        value: Value::BuiltInFn(_free_disk),
+                    },
+                    Export::Item {
+                        name: String::from("cpus"),
+                        value: Value::BuiltInFn(_cpus),
+                    },
+                    Export::Item {
+                        name: String::from("cpu_speed"),
+                        value: Value::BuiltInFn(_cpu_speed),
+                    },
+                    Export::Item {
+                        name: String::from("version"),
+                        value: Value::BuiltInFn(_version),
+                    },
+                    Export::Item {
+                        name: String::from("processes"),
+                        value: Value::BuiltInFn(_processes),
+                    },
+                ],
             },
         ],
     }]
+}
+
+pub fn _platform(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    Ok(Value::String(env::consts::OS.to_string()))
+}
+
+pub fn _free_mem(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let mem_info = sys_info::mem_info().unwrap();
+    Ok(Value::Int(mem_info.free as i32))
+}
+
+pub fn _total_mem(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let mem_info = sys_info::mem_info().unwrap();
+    Ok(Value::Int(mem_info.total as i32))
+}
+
+pub fn _total_disk(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let disk_info = sys_info::disk_info().unwrap();
+    Ok(Value::Int(disk_info.total as i32))
+}
+
+pub fn _free_disk(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let disk_info = sys_info::disk_info().unwrap();
+    Ok(Value::Int(disk_info.free as i32))
+}
+
+pub fn _cpus(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let cpu_num = sys_info::cpu_num().unwrap();
+    Ok(Value::Int(cpu_num as i32))
+}
+
+pub fn _cpu_speed(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let cpu_speed = sys_info::cpu_speed().unwrap();
+    Ok(Value::Int(cpu_speed as i32))
+}
+
+pub fn _version(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let version = sys_info::os_release().unwrap();
+    Ok(Value::String(version))
+}
+
+pub fn _processes(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let processes = sys_info::proc_total().unwrap();
+    Ok(Value::Int(processes as i32))
 }

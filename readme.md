@@ -39,7 +39,7 @@ v 0.2.0:
         23. obj.get()                                                           [pass]
 
 v 0.3.0:
-        1. std::fs module                                                       [pass]
+        1. new std::fs module                                                   [pass]
         2. module imports as object                                             [pass]
         3. typeof operator                                                      [pass]
         4. string.chars()                                                       [pass]
@@ -70,4 +70,15 @@ v 0.3.0:
         29. fs::remove_dir()                                                    [pass]
 
 v 0.4.0
-        1. 
+        1. new std::system module                                               [pass]
+        2. new std::io module
+        4. system::platform()                                                   [pass]
+        5. system::free_mem()                                                   [pass]
+        6. system::total_mem()                                                  [pass]
+        7. system::free_disk()                                                  [pass]
+        8. system::total_disk()                                                 [pass]
+        9. system::cpus()                                                       [pass]
+        10. system::cpu_speed()                                                 [pass]
+        11. system::version()
+        12. system::processes()
+        

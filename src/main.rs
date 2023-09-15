@@ -8,6 +8,7 @@ use runtime::{DeclType, ScopeStack};
 
 #[macro_use]
 extern crate lalrpop_util;
+extern crate sys_info;
 
 lalrpop_util::lalrpop_mod!(pub grammar);
 
@@ -64,7 +65,13 @@ pub fn ak_panic(vs: Vec<Value>) -> Result<Value, String> {
 
 fn main() -> Result<(), String> {
     let mut gs = HashMap::new();
-    
+    let sys = sys_info::proc_total().unwrap();
+    // let free_mem = sys.free;
+    // let total_mem = sys.total;
+
+    println!("os type: {}", sys);
+    // println!("total mem: {} MG", total_mem / 1024);
+
     gs.insert(
         String::from("print"),
         (Value::BuiltInFn(ak_print), DeclType::Immutable),
