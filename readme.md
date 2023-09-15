@@ -71,8 +71,8 @@ v 0.3.0:
 
 v 0.4.0
         1. named imports => use std::collections::{map, set};                   [pass]
-        1. new std::system module                                               [pass]
-        2. new std::env module                                                  [pass]
+        2. new std::system module                                               [pass]
+        3. new std::env module                                                  [pass]
         4. system::platform()                                                   [pass]
         5. system::free_mem()                                                   [pass]
         6. system::total_mem()                                                  [pass]
@@ -85,5 +85,9 @@ v 0.4.0
         13. system.arch()                                                       [pass]
         14. system.family()                                                     [pass]
         15. env::args()                                                         [pass]
-        16. string.lines()                                                      [pass]
-        17. string.to_numeric()                                                 [pass]
+        16. env::var()                                                          [pass]
+        17. env::vars()                                                         [pass]
+        18. env::set_var()                                                      [pass]
+        19. env::remove_var()                                                   [pass]
+        20. string.lines()                                                      [pass]
+        21. string.to_numeric()                                                 [pass]

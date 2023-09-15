@@ -11,6 +11,8 @@ pub mod system;
 
 pub use prototypes::{prototypes, Prototypes};
 
+use super::value::KeyValue;
+
 pub fn modules() -> Vec<Export> {
     vec![Export::Module {
         name: String::from("std"),
@@ -147,10 +149,28 @@ pub fn modules() -> Vec<Export> {
             },
             Export::Module {
                 name: String::from("env"),
-                exports: vec![Export::Item {
-                    name: String::from("args"),
-                    value: Value::BuiltInFn(_env_args),
-                }],
+                exports: vec![
+                    Export::Item {
+                        name: String::from("args"),
+                        value: Value::BuiltInFn(_env_args),
+                    },
+                    Export::Item {
+                        name: String::from("var"),
+                        value: Value::BuiltInFn(_env_var),
+                    },
+                    Export::Item {
+                        name: String::from("vars"),
+                        value: Value::BuiltInFn(_env_vars),
+                    },
+                    Export::Item {
+                        name: String::from("set_var"),
+                        value: Value::BuiltInFn(_env_set_var),
+                    },
+                    Export::Item {
+                        name: String::from("remove_var"),
+                        value: Value::BuiltInFn(_env_remove_var),
+                    },
+                ],
             },
         ],
     }]
@@ -166,4 +186,77 @@ pub fn _env_args(vs: Vec<Value>) -> Result<Value, String> {
         args.push(Value::String(arg))
     }
     Ok(Value::List(args))
+}
+
+pub fn _env_vars(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 0 {
+        return Err(format!("expected 0 arguments, but found {}", vs.len()));
+    }
+
+    let mut vars = Vec::new();
+    for (key, value) in env::vars() {
+        vars.push(KeyValue {
+            key,
+            value: Value::String(value),
+        });
+    }
+
+    Ok(Value::Object(vars))
+}
+
+pub fn _env_var(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 1 && vs.len() < 1 {
+        return Err(format!("expected 1 arguments, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::String(arg1) => match env::var(arg1) {
+                Ok(v) => return Ok(Value::String(v)),
+                Err(e) => return Err(e.to_string()),
+            },
+            _ => return Err(format!("the first argument most be a string")),
+        },
+        None => return Err(format!("expected 1 arguments, but found {}", vs.len())),
+    }
+}
+
+pub fn _env_remove_var(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 1 && vs.len() < 1 {
+        return Err(format!("expected 1 arguments, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::String(key) => {
+                env::remove_var(key);
+                return Ok(Value::Null);
+            }
+            _ => return Err(format!("the first argument most be a string")),
+        },
+        None => return Err(format!("expected 1 arguments, but found {}", vs.len())),
+    }
+}
+
+pub fn _env_set_var(vs: Vec<Value>) -> Result<Value, String> {
+    if vs.len() > 1 && vs.len() < 1 {
+        return Err(format!("expected 1 arguments, but found {}", vs.len()));
+    }
+
+    match vs.get(0) {
+        Some(value) => match value {
+            Value::String(arg1) => match vs.get(1) {
+                Some(value2) => match value2 {
+                    Value::String(arg2) => {
+                        env::set_var(arg1, arg2);
+                        return Ok(Value::Null);
+                    }
+                    _ => return Err(format!("the second argument most be a string")),
+                },
+                None => return Err(format!("expected 1 arguments, but found {}", vs.len())),
+            },
+            _ => return Err(format!("the first argument most be a string")),
+        },
+        None => return Err(format!("expected 1 arguments, but found {}", vs.len())),
+    }
 }

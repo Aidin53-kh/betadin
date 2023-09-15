@@ -1,4 +1,10 @@
-use std::{system, math};
+use std::env;
+use std::fs;
 
-println(system.cpus());
-println(math.add(3, 5));
+env.set_var("AK", "aidin53");
+
+println(env.var("AK"));
+
+env.remove_var("AK");
+
+println(env.var("AK"));
