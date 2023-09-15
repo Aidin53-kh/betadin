@@ -1,13 +1,20 @@
-use std::system;
+use std::fs;
 
-println("free mem: " + system.free_mem());
-println("total mem: " + system.total_mem());
-println("total disk: " + system.total_disk() / 1024);
-println("free disk: " + system.free_disk() / 1024);
-println("platform: " + system.platform());
-println("cpus: " + system.cpus());
-println("cpu speed: " + system.cpu_speed());
-println("processes: " + system.processes());
+let content = fs.read("readme.md");
 
+const person = {
+    name: "aidin",
+    age: 20,
+    other: {
+        address: "joben",
+        email: "aidin@gmail.com" 
+    }
+};
 
+fn rev_str(str) {
+    ret str.chars().rev().join("");
+}
 
+println(
+    content
+);

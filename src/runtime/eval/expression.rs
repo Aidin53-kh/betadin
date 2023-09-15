@@ -1,10 +1,9 @@
-use std::collections::HashMap;
-
 use crate::ast::{BinaryOpKind, Expression, UnaryOpKind};
 use crate::runtime::std::Prototypes;
 use crate::runtime::value::{KeyValue, Type, Value};
 use crate::runtime::{DeclType, ScopeStack};
 use crate::Export;
+use std::collections::HashMap;
 
 use super::statement::{eval_statements, Escape};
 

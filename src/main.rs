@@ -65,12 +65,6 @@ pub fn ak_panic(vs: Vec<Value>) -> Result<Value, String> {
 
 fn main() -> Result<(), String> {
     let mut gs = HashMap::new();
-    let sys = sys_info::proc_total().unwrap();
-    // let free_mem = sys.free;
-    // let total_mem = sys.total;
-
-    println!("os type: {}", sys);
-    // println!("total mem: {} MG", total_mem / 1024);
 
     gs.insert(
         String::from("print"),
@@ -87,7 +81,6 @@ fn main() -> Result<(), String> {
     );
 
     let global_scope = Arc::new(Mutex::new(gs));
-
     let mut scopes = ScopeStack::new(vec![global_scope]);
 
     let code = fs::read_to_string("./examples/test.ak").expect("unable to read the file");
