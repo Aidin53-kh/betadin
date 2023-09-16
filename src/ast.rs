@@ -40,6 +40,7 @@ pub enum Expression {
     Index(Box<Expression>, Box<Expression>),
     BinaryOp(Box<Expression>, BinaryOpKind, Box<Expression>),
     UnaryOp(UnaryOpKind, Box<Expression>),
+    Fn(Vec<String>, Block)
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

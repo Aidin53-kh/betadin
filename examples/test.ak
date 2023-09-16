@@ -1,10 +1,5 @@
-use std::env;
-use std::fs;
+let x = fn (g) {
+    return g.pow(2);
+};
 
-env.set_var("AK", "aidin53");
-
-println(env.var("AK"));
-
-env.remove_var("AK");
-
-println(env.var("AK"));
+println(x(3));

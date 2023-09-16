@@ -329,5 +329,6 @@ pub fn eval_expression(
 
             Ok(Value::Object(values))
         }
+        Expression::Fn(args, block) => Ok(Value::Func(args, block)),
     }
 }
