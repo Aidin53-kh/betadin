@@ -1,27 +1,37 @@
-import std::system;
-
-module aidin {
-    const name = "aidin53";
-
-    module data {
-        fn getage() {
-            return 20;
-        }
-    }
+fn aidin() {
+    return module {
+        const name = "aidin53";
+    };
 }
 
-import aidin::data;
+let x = aidin();
 
-const myname = aidin::name;
-const name = data::getage();
+println(x::name);
 
-fn main() {
-    import std::system;
+# import std::system;
 
-    println(system::platform().chars().rev().join(""));
-}
+# module aidin {
+#     const name = "aidin53";
 
-main();
+#     module data {
+#         fn getage() {
+#             return 20;
+#         }
+#     }
+# }
+
+# import aidin::data;
+
+# const myname = aidin::name;
+# const name = data::getage();
+
+# fn main() {
+#     import std::system;
+
+#     println(system::platform().chars().rev().join(""));
+# }
+
+# main();
 
 # println(myname);
 # println(name);

@@ -100,7 +100,8 @@ expr_4: Expression = {
     "!" <expr:expr_5> => Expression::UnaryOp(UnaryOpKind::Not, Box::new(expr)),   
     "typeof" <expr:expr_5> => Expression::UnaryOp(UnaryOpKind::Typeof, Box::new(expr)),
     "fn" "(" <params:params> ")" <block:block>  => Expression::Fn(params, block),
-    
+    "module" <block:module_block> => Expression::Module(block),
+        
     <lhs:expr_4> "*" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Mul, Box::new(rhs)),
     <lhs:expr_4> "/" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Div, Box::new(rhs)),
     expr_5

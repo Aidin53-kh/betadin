@@ -43,6 +43,7 @@ pub enum Expression {
     BinaryOp(Box<Expression>, BinaryOpKind, Box<Expression>),
     UnaryOp(UnaryOpKind, Box<Expression>),
     Fn(Vec<String>, Block),
+    Module(Block),
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

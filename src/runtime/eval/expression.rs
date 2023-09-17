@@ -5,7 +5,7 @@ use crate::runtime::prototypes::Prototypes;
 use crate::runtime::value::{KeyValue, Type, Value};
 use crate::runtime::{DeclType, ScopeStack};
 
-use super::statement::{eval_statements, Escape};
+use super::statement::{eval_module, eval_statements, Escape};
 
 pub fn eval_expression(
     scopes: &mut ScopeStack,
@@ -324,6 +324,10 @@ pub fn eval_expression(
 
             let value = eval_expression(&mut inner_scopes, *expr, prototypes.clone())?;
             Ok(value)
+        }
+        Expression::Module(statements) => {
+            let module = eval_module(scopes, prototypes, "test".to_string(), statements)?;
+            Ok(Value::Module(module))
         }
     }
 }
