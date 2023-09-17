@@ -1,38 +1,15 @@
-fn aidin() {
+let x = fn() {
     return module {
-        const name = "aidin53";
+        const name = "aidin";
     };
-}
+};
 
-let x = aidin();
+x = x();
 
-println(x::name);
+let y = if x::name.len() > 5 {
+    return "if block";
+} else {
+    return "else block";
+};
 
-# import std::system;
-
-# module aidin {
-#     const name = "aidin53";
-
-#     module data {
-#         fn getage() {
-#             return 20;
-#         }
-#     }
-# }
-
-# import aidin::data;
-
-# const myname = aidin::name;
-# const name = data::getage();
-
-# fn main() {
-#     import std::system;
-
-#     println(system::platform().chars().rev().join(""));
-# }
-
-# main();
-
-# println(myname);
-# println(name);
-# println(system::platform());
+println(y);

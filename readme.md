@@ -94,7 +94,7 @@ v 0.4.0
 
 v 0.5.0:
         1. function expressions                                                 [pass]
-        2. module expressions
+        2. module expressions                                                   [pass]
         3. module statements                                                    [pass]
         4. module calls => fs::write()                                          [pass]
         5. move old modules to new module structure                             [pass]

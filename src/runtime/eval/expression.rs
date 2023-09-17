@@ -329,6 +329,35 @@ pub fn eval_expression(
             let module = eval_module(scopes, prototypes, "test".to_string(), statements)?;
             Ok(Value::Module(module))
         }
+        Expression::If(branchs, else_block) => {
+            for branch in branchs {
+                let value = eval_expression(scopes, branch.condition, prototypes.clone())?;
+
+                match value {
+                    Value::Bool(b) => {
+                        if b {
+                            let ret =
+                                eval_statements(scopes, branch.statements, prototypes.clone())?;
+
+                            if let Escape::Return(value) = ret {
+                                return Ok(value);
+                            }
+                        }
+                    }
+                    _ => return Err(format!("condition most be a boolean")),
+                }
+            }
+
+            if let Some(stmts) = else_block {
+                let e = eval_statements(scopes, stmts, prototypes.clone())?;
+
+                if let Escape::Return(value) = e {
+                    return Ok(value);
+                }
+            }
+
+            Ok(Value::Null)
+        }
     }
 }
 

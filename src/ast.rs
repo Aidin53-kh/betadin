@@ -44,6 +44,7 @@ pub enum Expression {
     UnaryOp(UnaryOpKind, Box<Expression>),
     Fn(Vec<String>, Block),
     Module(Block),
+    If(Vec<Branch>, Option<Block>),
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

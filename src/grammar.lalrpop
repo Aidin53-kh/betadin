@@ -65,6 +65,19 @@ if_statement: Statement = {
     }
 }
 
+if_expr: Expression = {
+    "if" <cond:expr> <if_block:block> => Expression::If(vec![Branch::new(cond, if_block)], None),
+    "if" <cond:expr> <if_block:block> "else" <else_block:block> => Expression::If(vec![Branch::new(cond, if_block)], Some(else_block)),
+    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_expr> => {
+        if let Expression::If(mut branches, else_stmt) = else_if_stmts {
+            branches.insert(0, Branch::new(cond, if_block));
+            return Expression::If(branches, else_stmt);
+        } else {
+            panic!("grammar error: if statement");
+        }
+    }
+}
+
 import_args: Vec<String> = {
     <args:import_args> "::" <name:identifier> => append(args, name),
     <name:identifier> => vec![name],
@@ -101,6 +114,7 @@ expr_4: Expression = {
     "typeof" <expr:expr_5> => Expression::UnaryOp(UnaryOpKind::Typeof, Box::new(expr)),
     "fn" "(" <params:params> ")" <block:block>  => Expression::Fn(params, block),
     "module" <block:module_block> => Expression::Module(block),
+    if_expr,
         
     <lhs:expr_4> "*" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Mul, Box::new(rhs)),
     <lhs:expr_4> "/" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Div, Box::new(rhs)),
