@@ -91,7 +91,7 @@ pub fn eval_statement(
             let iter_val = eval_expression(scopes, iter, prototypes.clone())?;
 
             match iter_val {
-                Value::List(values) => {
+                Value::List(values) | Value::Tuple(values) => {
                     for value in values {
                         let mut inner_scopes = scopes.new_from_push(HashMap::new());
 

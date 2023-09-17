@@ -13,3 +13,9 @@ let y = if x::name.len() > 5 {
 };
 
 println(y);
+
+let t = @(1, 2, 3);
+
+for i in t {
+    
+}

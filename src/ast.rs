@@ -45,6 +45,7 @@ pub enum Expression {
     Fn(Vec<String>, Block),
     Module(Block),
     If(Vec<Branch>, Option<Block>),
+    Tuple(Vec<Expression>),
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

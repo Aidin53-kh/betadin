@@ -358,6 +358,16 @@ pub fn eval_expression(
 
             Ok(Value::Null)
         }
+        Expression::Tuple(exprs) => {
+            let mut values = Vec::new();
+
+            for expr in exprs {
+                let value = eval_expression(scopes, expr, prototypes.clone())?;
+                values.push(value);
+            }
+
+            Ok(Value::Tuple(values))
+        }
     }
 }
 

@@ -95,16 +95,18 @@ v 0.4.0
 v 0.5.0:
         1. function expressions                                                 [pass]
         2. module expressions                                                   [pass]
-        3. module statements                                                    [pass]
-        4. module calls => fs::write()                                          [pass]
-        5. move old modules to new module structure                             [pass]
-        6. spered operator for lists => [1, 2, ..other]
-        7. tuple literals => (1, 2 ,3)
-        8. new import system                                                    [pass]
-        9. rename `use` keyword to `import`                                     [pass]
-        10. rename `ret` keyword to `return`                                    [pass]
-        11. fs::is_file()
-        12. fs::is_dir()
-        13. list.filter()
-        14. list.find() 
-        15. list.map()
+        3. if expression                                                        [pass]
+        4. module statements                                                    [pass]
+        5. module calls => fs::write()                                          [pass]
+        6. move old modules to new module structure                             [pass]
+        7. spered operator for lists => [1, 2, ..other]
+        8. tuple literals => (1, 2 ,3)                                          [pass]
+        9. loop on tuple literals                                               [pass]   
+        9. new import system                                                    [pass]
+        10. rename `use` keyword to `import`                                    [pass]
+        11. rename `ret` keyword to `return`                                    [pass]
+        12. fs::is_file()
+        13. fs::is_dir()
+        14. list.filter()
+        15. list.find() 
+        16. list.map()
