@@ -239,6 +239,7 @@ impl Mul for &Value {
                 Value::Object(_) => todo!(),
                 Value::Module(_) => todo!(),
             },
+            Value::Module(_) => todo!(),
             Value::String(_) => match rhs {
                 Value::Null => Err(format!("cannot mul string with null")),
                 Value::Int(_) => Err(format!("cannot mul string with int")),
@@ -258,7 +259,6 @@ impl Mul for &Value {
             Value::Bool(_) => todo!(),
             Value::Func(_, _) => todo!(),
             Value::Object(_) => todo!(),
-            Value::Module(_) => todo!(),
         }
     }
 }

@@ -1,16 +1,15 @@
+use std::collections::{BTreeMap, HashMap};
+
 use crate::ast::{BinaryOpKind, Expression, UnaryOpKind};
-use crate::runtime::std::Prototypes;
+use crate::runtime::prototypes::Prototypes;
 use crate::runtime::value::{KeyValue, Type, Value};
 use crate::runtime::{DeclType, ScopeStack};
-use crate::Export;
-use std::collections::{BTreeMap, HashMap};
 
 use super::statement::{eval_statements, Escape};
 
 pub fn eval_expression(
     scopes: &mut ScopeStack,
     expression: Expression,
-    modules: Vec<Export>,
     prototypes: Prototypes,
 ) -> Result<Value, String> {
     match expression {
@@ -23,7 +22,7 @@ pub fn eval_expression(
             let mut values: Vec<Value> = Vec::new();
 
             for expr in list {
-                let value = eval_expression(scopes, expr, modules.clone(), prototypes.clone())?;
+                let value = eval_expression(scopes, expr, prototypes.clone())?;
 
                 values.push(value);
             }
@@ -31,16 +30,14 @@ pub fn eval_expression(
             Ok(Value::List(values))
         }
         Expression::Call(expr, args) => {
-            let value =
-                eval_expression(scopes, *expr.clone(), modules.clone(), prototypes.clone())?;
+            let value = eval_expression(scopes, *expr.clone(), prototypes.clone())?;
 
             match value {
                 Value::BuiltInFn(f) => {
                     let mut values = vec![];
 
                     for arg in args {
-                        let val =
-                            eval_expression(scopes, arg, modules.clone(), prototypes.clone())?;
+                        let val = eval_expression(scopes, arg, prototypes.clone())?;
                         values.push(val);
                     }
 
@@ -63,7 +60,6 @@ pub fn eval_expression(
                                 let value = eval_expression(
                                     &mut inner_scope,
                                     expr.clone(),
-                                    modules.clone(),
                                     prototypes.clone(),
                                 )?;
 
@@ -79,7 +75,7 @@ pub fn eval_expression(
                         }
                     }
 
-                    let ret = eval_statements(&mut inner_scope, block, modules, prototypes)?;
+                    let ret = eval_statements(&mut inner_scope, block, prototypes)?;
                     match ret {
                         Escape::None => Ok(Value::Null),
                         Escape::Return(value) => Ok(value),
@@ -91,8 +87,7 @@ pub fn eval_expression(
                     let mut values = vec![];
 
                     for arg in args {
-                        let val =
-                            eval_expression(scopes, arg, modules.clone(), prototypes.clone())?;
+                        let val = eval_expression(scopes, arg, prototypes.clone())?;
                         values.push(val);
                     }
                     if let Some(this) = this {
@@ -115,8 +110,7 @@ pub fn eval_expression(
             None => Err(format!("{} is not defied (8)", name)),
         },
         Expression::MethodCall(object, calle) => {
-            let obj_value =
-                eval_expression(scopes, *object.clone(), modules.clone(), prototypes.clone())?;
+            let obj_value = eval_expression(scopes, *object.clone(), prototypes.clone())?;
 
             match *calle.clone() {
                 Expression::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
@@ -157,12 +151,7 @@ pub fn eval_expression(
                                     let mut values = vec![];
 
                                     for arg in args {
-                                        let val = eval_expression(
-                                            scopes,
-                                            arg,
-                                            modules.clone(),
-                                            prototypes.clone(),
-                                        )?;
+                                        let val = eval_expression(scopes, arg, prototypes.clone())?;
                                         values.push(val);
                                     }
 
@@ -209,12 +198,11 @@ pub fn eval_expression(
             }
         }
         Expression::Index(expr, loc) => {
-            let expr_value = eval_expression(scopes, *expr, modules.clone(), prototypes.clone())?;
+            let expr_value = eval_expression(scopes, *expr, prototypes.clone())?;
 
             match &expr_value {
                 Value::String(s) => {
-                    let loc_value =
-                        eval_expression(scopes, *loc, modules.clone(), prototypes.clone())?;
+                    let loc_value = eval_expression(scopes, *loc, prototypes.clone())?;
 
                     match loc_value {
                         Value::Int(index) => {
@@ -234,7 +222,7 @@ pub fn eval_expression(
                     }
                 }
                 Value::List(l) => {
-                    let loc_value = eval_expression(scopes, *loc, modules, prototypes.clone())?;
+                    let loc_value = eval_expression(scopes, *loc, prototypes.clone())?;
 
                     match loc_value {
                         Value::Int(index) => {
@@ -262,8 +250,8 @@ pub fn eval_expression(
             }
         }
         Expression::BinaryOp(lhs_expr, op, rhs_expr) => {
-            let lhs = eval_expression(scopes, *lhs_expr, modules.clone(), prototypes.clone())?;
-            let rhs = eval_expression(scopes, *rhs_expr, modules.clone(), prototypes.clone())?;
+            let lhs = eval_expression(scopes, *lhs_expr, prototypes.clone())?;
+            let rhs = eval_expression(scopes, *rhs_expr, prototypes.clone())?;
 
             let res = match op {
                 BinaryOpKind::Add => &lhs + &rhs,
@@ -303,7 +291,7 @@ pub fn eval_expression(
             res
         }
         Expression::UnaryOp(op, expr) => {
-            let value = eval_expression(scopes, *expr, modules, prototypes)?;
+            let value = eval_expression(scopes, *expr, prototypes)?;
 
             match op {
                 UnaryOpKind::Not => !value,
@@ -314,12 +302,7 @@ pub fn eval_expression(
             let mut values: Vec<KeyValue> = Vec::new();
 
             for prop in &props {
-                let value = eval_expression(
-                    scopes,
-                    prop.value.clone(),
-                    modules.clone(),
-                    prototypes.clone(),
-                )?;
+                let value = eval_expression(scopes, prop.value.clone(), prototypes.clone())?;
 
                 values.push(KeyValue {
                     key: prop.key.to_string(),
@@ -339,12 +322,7 @@ pub fn eval_expression(
                 inner_scopes.declare(key, value, DeclType::Immutable)?;
             }
 
-            let value = eval_expression(
-                &mut inner_scopes,
-                *expr,
-                modules.clone(),
-                prototypes.clone(),
-            )?;
+            let value = eval_expression(&mut inner_scopes, *expr, prototypes.clone())?;
             Ok(value)
         }
     }
@@ -362,16 +340,16 @@ pub fn get_module(
                 Value::Module(items) => {
                     exports = items.clone();
                 }
-                _ => todo!(),
+                _ => return Err(format!("module {} not found", path)),
             },
             None => match scopes.get(path) {
                 Some(value) => match value {
                     Value::Module(items) => {
                         exports = items;
                     }
-                    _ => todo!(),
+                    _ => return Err(format!("module {} not found", path)),
                 },
-                None => todo!(),
+                None => return Err(format!("module {} not found", path)),
             },
         }
     }

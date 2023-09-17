@@ -1,11 +1,12 @@
 use ::std::collections::HashMap;
 use ::std::sync::{Arc, Mutex};
 
-use self::std::prototypes::object::object_proto;
+use self::prototypes::object::object_proto;
 use self::value::Value;
 
 pub mod eval;
-pub mod std;
+pub mod lib;
+pub mod prototypes;
 pub mod value;
 
 #[derive(Debug, Clone)]
@@ -55,28 +56,15 @@ impl ScopeStack {
                 .find(|kv| obj_proto.get(&kv.key).is_some());
 
             if let Some(kv) = res {
-                return Err(format!("property '{}' is reserved in object prototype", kv.key));
+                return Err(format!(
+                    "property '{}' is reserved in object prototype",
+                    kv.key
+                ));
             }
         }
 
         if current_scope.contains_key(&name) {
             return Err(format!("'{}' already define in this scope", name));
-        }
-        current_scope.insert(name, (value, decl_type));
-
-        Ok(())
-    }
-
-    fn declare_builtin(&mut self, name: String, value: Value, decl_type: DeclType) -> Result<(), String> {
-        let mut current_scope = self
-            .0
-            .last()
-            .expect("`ScopeStack` stack shouldn't be empty")
-            .lock()
-            .unwrap();
-
-        if current_scope.contains_key(&name) {
-            return Err(format!("'{}' already define in this scope (2)", name));
         }
         current_scope.insert(name, (value, decl_type));
 
