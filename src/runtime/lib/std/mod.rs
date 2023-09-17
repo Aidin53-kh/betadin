@@ -3,10 +3,12 @@ use std::collections::BTreeMap;
 use crate::runtime::value::Value;
 
 use self::collections::Collections;
+use self::env::Env;
 use self::fs::Fs;
 use self::system::System;
 
 pub mod collections;
+pub mod env;
 pub mod fs;
 pub mod system;
 
@@ -23,6 +25,7 @@ impl Std {
         // std modules
         std.declare("system", Value::Module(System::exports()));
         std.declare("fs", Value::Module(Fs::exports()));
+        std.declare("env", Value::Module(Env::exports()));
         std.declare("collections", Value::Module(Collections::exports()));
 
         return std.items();

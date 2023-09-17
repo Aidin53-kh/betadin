@@ -15,6 +15,14 @@ import aidin::data;
 const myname = aidin::name;
 const name = data::getage();
 
-println(myname);
-println(name);
-println(system::platform());
+fn main() {
+    import std::system;
+
+    println(system::platform().chars().rev().join(""));
+}
+
+main();
+
+# println(myname);
+# println(name);
+# println(system::platform());
