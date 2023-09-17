@@ -19,6 +19,7 @@ pub enum Statement {
     IfStatement(Vec<Branch>, Option<Block>),
     ReturnStatement(Expression),
     FnStatement(String, Vec<String>, Block),
+    ModuleStatement(String, Block),
     ForStatement(String, Expression, Block),
     WhileStatement(Expression, Block),
     BreakStatement,
@@ -37,10 +38,11 @@ pub enum Expression {
     Identifier(String),
     Call(Box<Expression>, Vec<Expression>),
     MethodCall(Box<Expression>, Box<Expression>),
+    ModuleCall(Vec<String>, Box<Expression>),
     Index(Box<Expression>, Box<Expression>),
     BinaryOp(Box<Expression>, BinaryOpKind, Box<Expression>),
     UnaryOp(UnaryOpKind, Box<Expression>),
-    Fn(Vec<String>, Block)
+    Fn(Vec<String>, Block),
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

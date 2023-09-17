@@ -93,16 +93,17 @@ v 0.4.0
         21. string.to_numeric()                                                 [pass]
 
 v 0.5.0:
-        1. function expressions
-        2. module expression
-        3. module calls => fs::write()
-        4. spered operator for lists => [1, 2, ..other]
-        5. tuple literals => (1, 2 ,3)
-        6. new import system
-        6. rename `use` keyword to `import`
-        7. rename `ret` keyword to `return`
-        8. fs::is_file()
-        9. fs::is_dir()
-        10. list.filter()
-        11. list.find() 
-        12. list.map()
+        1. function expressions                                                 [pass]
+        2. module expressions
+        3. module statements
+        4. module calls => fs::write()
+        5. spered operator for lists => [1, 2, ..other]
+        6. tuple literals => (1, 2 ,3)
+        7. new import system
+        8. rename `use` keyword to `import`
+        9. rename `ret` keyword to `return`
+        10. fs::is_file()
+        11. fs::is_dir()
+        12. list.filter()
+        13. list.find() 
+        14. list.map()

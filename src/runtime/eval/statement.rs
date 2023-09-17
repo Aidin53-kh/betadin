@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use super::expression::eval_expression;
 use crate::ast::Statement;
@@ -132,6 +132,11 @@ pub fn eval_statement(
                 _ => return Err(format!("condition most be a boolean")),
             }
         },
+        Statement::ModuleStatement(name, statements) => {
+            let module = eval_module(scopes, modules, prototypes, name.to_string(), statements)?;
+
+            scopes.declare(name, Value::Module(module), DeclType::Immutable)?;
+        }
     };
 
     Ok(Escape::None)
@@ -165,6 +170,51 @@ pub fn eval_statements(
     }
 
     Ok(Escape::None)
+}
+
+pub fn eval_module(
+    scopes: &mut ScopeStack,
+    modules: Vec<Export>,
+    prototypes: Prototypes,
+    name: String,
+    statements: Vec<Statement>,
+) -> Result<BTreeMap<String, Value>, String> {
+    let mut exports: BTreeMap<String, Value> = BTreeMap::new();
+
+    let mut inner_scope = scopes.new_from_push(HashMap::new());
+    for statement in statements {
+        match statement {
+            Statement::ConstStatement(name, expr) => {
+                let value =
+                    eval_expression(&mut inner_scope, expr, modules.clone(), prototypes.clone())?;
+
+                exports.insert(name, value);
+            }
+            Statement::LetStatement(name, expr) => {
+                let value =
+                    eval_expression(&mut inner_scope, expr, modules.clone(), prototypes.clone())?;
+
+                exports.insert(name, value);
+            }
+            Statement::FnStatement(name, args, block) => {
+                exports.insert(name, Value::Func(args, block));
+            }
+            Statement::ModuleStatement(name2, statements2) => {
+                let exports2 = eval_module(
+                    &mut inner_scope,
+                    modules.clone(),
+                    prototypes.clone(),
+                    name2.to_string(),
+                    statements2,
+                )?;
+                exports.insert(name2, Value::Module(exports2));
+            }
+            other => return Err(format!("'{:?}' is not supported in modules", other)),
+        }
+    }
+
+    inner_scope.declare(name, Value::Module(exports.clone()), DeclType::Immutable)?;
+    Ok(exports)
 }
 
 pub fn apply_imports(

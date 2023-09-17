@@ -3,7 +3,7 @@ use crate::runtime::std::Prototypes;
 use crate::runtime::value::{KeyValue, Type, Value};
 use crate::runtime::{DeclType, ScopeStack};
 use crate::Export;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use super::statement::{eval_statements, Escape};
 
@@ -330,5 +330,51 @@ pub fn eval_expression(
             Ok(Value::Object(values))
         }
         Expression::Fn(args, block) => Ok(Value::Func(args, block)),
+        Expression::ModuleCall(paths, expr) => {
+            let module = get_module(scopes, paths)?;
+
+            let mut inner_scopes = scopes.new_from_push(HashMap::new());
+
+            for (key, value) in module {
+                inner_scopes.declare(key, value, DeclType::Immutable)?;
+            }
+
+            let value = eval_expression(
+                &mut inner_scopes,
+                *expr,
+                modules.clone(),
+                prototypes.clone(),
+            )?;
+            Ok(value)
+        }
     }
+}
+
+pub fn get_module(
+    scopes: &mut ScopeStack,
+    paths: Vec<String>,
+) -> Result<BTreeMap<String, Value>, String> {
+    let mut exports: BTreeMap<String, Value> = BTreeMap::new();
+
+    for path in &paths {
+        match exports.get(path) {
+            Some(value) => match value {
+                Value::Module(items) => {
+                    exports = items.clone();
+                }
+                _ => todo!(),
+            },
+            None => match scopes.get(path) {
+                Some(value) => match value {
+                    Value::Module(items) => {
+                        exports = items;
+                    }
+                    _ => todo!(),
+                },
+                None => todo!(),
+            },
+        }
+    }
+
+    Ok(exports)
 }

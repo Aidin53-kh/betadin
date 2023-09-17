@@ -22,6 +22,7 @@ statement: Statement = {
     continue_statement,
     while_statement,
     const_statement,
+    module_statement
 }
 
 import_statement: Statement = {
@@ -48,6 +49,8 @@ break_statement: Statement = "break" ";" => Statement::BreakStatement;
 continue_statement: Statement = "continue" ";" => Statement::ContinueStatement;
 
 while_statement: Statement = "while" <cond:expr> <block:block> => Statement::WhileStatement(cond, block);
+
+module_statement: Statement = "module" <name:identifier> <block:module_block> => Statement::ModuleStatement(name, block);
 
 if_statement: Statement = {
     "if" <cond:expr> <if_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], None),
@@ -104,9 +107,15 @@ expr_4: Expression = {
 }
 
 expr_5: Expression = {
-    <head:expr_5> "." <tail:expr_7> => Expression::MethodCall(Box::new(head), Box::new(tail)),
-    <head:expr_5> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
-    <expr:expr_5> "(" <args:args> ")" => Expression::Call(Box::new(expr), args),
+    <head:import_args> "::" <tail:expr_6> => Expression::ModuleCall(head, Box::new(tail)),
+    
+    expr_6
+}
+
+expr_6: Expression = {
+    <head:expr_6> "." <tail:expr_7> => Expression::MethodCall(Box::new(head), Box::new(tail)),
+    <head:expr_6> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
+    <expr:expr_6> "(" <args:args> ")" => Expression::Call(Box::new(expr), args),
     "{" <props:props> ","? "}" => Expression::Object(props),
     expr_7
 }
@@ -142,6 +151,17 @@ params: Vec<String> = {
     () => vec![],
     <params:params> "," <param:identifier> => append(params, param),
     <param:identifier> => vec![param]
+}
+
+module_block_statement: Statement = {
+    let_statement,
+    const_statement,
+    fn_statement,
+    module_statement,
+}
+
+module_block: Block = {
+    "{" <stmts:module_block_statement*> "}" => stmts,
 }
 
 block: Block = {
@@ -218,7 +238,8 @@ match {
     "continue",
     "while",
     "const",
-    "typeof"
+    "typeof",
+    "module"
 } else {
     " " => {},
     "\n" => {},

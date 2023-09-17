@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::sync::{Arc, Mutex};
 
@@ -65,6 +65,14 @@ pub fn ak_panic(vs: Vec<Value>) -> Result<Value, String> {
 
 fn main() -> Result<(), String> {
     let mut gs = HashMap::new();
+    let mut core = BTreeMap::new();
+
+    core.insert(String::from("version"), Value::String("1.0.0".to_string()));
+
+    gs.insert(
+        String::from("core"),
+        (Value::Module(core), DeclType::Immutable),
+    );
 
     gs.insert(
         String::from("print"),
