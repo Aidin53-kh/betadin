@@ -1,11 +1,8 @@
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::collections::HashMap;
 
-use crate::runtime::{
-    value::{Type, Value},
-    DeclType, ScopeStack, eval::statement::{eval_statements, Escape},
-};
+use crate::runtime::value::{Type, Value};
 
-use super::{string::{_contains, _len, _to_string}, Prototypes};
+use super::string::{_contains, _len, _to_string};
 
 pub fn list_proto() -> HashMap<String, Value> {
     let mut list_proto = HashMap::new();

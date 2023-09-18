@@ -106,4 +106,4 @@ v 0.5.0:
         11. tuple accessing by index => x[0]                                    [pass]
         11. rename `use` keyword to `import`                                    [pass]
         12. rename `ret` keyword to `return`                                    [pass]
-        13 tuple.at()
+        13 tuple.at()                                                           [pass]

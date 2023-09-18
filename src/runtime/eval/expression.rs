@@ -343,6 +343,8 @@ pub fn eval_expression(
                             if let Escape::Return(value) = ret {
                                 return Ok(value);
                             }
+
+                            return Ok(Value::Null);
                         }
                     }
                     _ => return Err(format!("condition most be a boolean")),

@@ -29,27 +29,13 @@ statement: Statement = {
 if_statement: Statement = {
     "if" <cond:expr> <if_block:block> => Statement::If(vec![Branch::new(cond, if_block)], None),
     "if" <cond:expr> <if_block:block> "else" <else_block:block> => Statement::If(vec![Branch::new(cond, if_block)], Some(else_block)),
-    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_statement> => {
-        if let Statement::If(mut branches, else_stmt) = else_if_stmts {
-            branches.insert(0, Branch::new(cond, if_block));
-            return Statement::If(branches, else_stmt);
-        } else {
-            panic!("grammar error: if statement");
-        }
-    }
+    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_statement> => insert_to_branch_stmt(cond, if_block, else_if_stmts),
 }
 
 if_expr: Expr = {
     "if" <cond:expr> <if_block:block> => Expr::If(vec![Branch::new(cond, if_block)], None),
     "if" <cond:expr> <if_block:block> "else" <else_block:block> => Expr::If(vec![Branch::new(cond, if_block)], Some(else_block)),
-    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_expr> => {
-        if let Expr::If(mut branches, else_stmt) = else_if_stmts {
-            branches.insert(0, Branch::new(cond, if_block));
-            return Expr::If(branches, else_stmt);
-        } else {
-            panic!("grammar error: if statement");
-        }
-    }
+    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_expr> => insert_to_branch_expr(cond, if_block, else_if_stmts),
 }
 
 import_args: Vec<String> = {

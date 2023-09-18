@@ -1,4 +1,10 @@
-let x = (1, 2, 3, (4, 5));
+let x = 3;
 
-println(x.at(3)[1]);
+let g = if x == 0 {
+    println("if");
+} else {
+    println("else");
+    return 39;
+};
 
+println(g);
