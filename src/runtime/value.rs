@@ -119,7 +119,7 @@ impl From<&Value> for Value {
             Value::Func(args, block) => Value::Func(args.to_vec(), block.to_vec()),
             Value::Object(props) => Value::Object(props.to_vec()),
             Value::Module(items) => Value::Module(items.to_owned()),
-            Value::Tuple(_) => todo!(),
+            Value::Tuple(t) => Value::Tuple(t.to_vec()),
         }
     }
 }

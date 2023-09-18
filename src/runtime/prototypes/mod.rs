@@ -8,6 +8,7 @@ pub mod list;
 pub mod null;
 pub mod object;
 pub mod string;
+pub mod tuple;
 pub struct Prototypes(HashMap<Type, HashMap<String, Value>>);
 
 impl Prototypes {
@@ -24,6 +25,7 @@ impl Prototypes {
         proto.declare(Type::Float, float::float_proto());
         proto.declare(Type::Null, null::null_proto());
         proto.declare(Type::Object, object::object_proto());
+        proto.declare(Type::Tuple, tuple::tuple_proto());
 
         return proto.items();
     }

@@ -109,7 +109,7 @@ expr_6: Expr = {
     <head:expr_6> "[" <tail:expr> "]" => Expr::Index(Box::new(head), Box::new(tail)),
     <expr:expr_6> "(" <args:args> ")" => Expr::Call(Box::new(expr), args),
     "{" <props:props> ","? "}" => Expr::Object(props),
-    "(" <expr:expr> "," <exprs:args> ")" => Expr::Tuple(append(exprs, expr)),
+    "(" <exprs:args> "," <expr:expr> ")" => Expr::Tuple(append(exprs, expr)),
 
     expr_7
 }

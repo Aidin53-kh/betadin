@@ -183,7 +183,14 @@ pub fn eval_expression(
                         ));
                     }
                 },
-                Expr::Index(_, _) => todo!(),
+                Expr::Int(n) => {
+                    return Err(format!(
+                        "{} is not found in {} prototype",
+                        n,
+                        Type::from(&obj_value)
+                    ))
+                }
+
                 _ => {
                     return Err(format!(
                         "value of type {:?} not callable (1)",
@@ -216,7 +223,7 @@ pub fn eval_expression(
                         }
                     }
                 }
-                Value::List(l) => {
+                Value::List(l) | Value::Tuple(l) => {
                     let loc_value = eval_expression(scopes, &*loc, &prototypes)?;
 
                     match loc_value {

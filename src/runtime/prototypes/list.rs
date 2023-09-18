@@ -49,7 +49,7 @@ pub fn _at(vs: Vec<Value>, this: Value) -> Result<Value, String> {
             },
             None => return Err(format!("expected 1 argument, but found {}", vs.len())),
         },
-        Value::List(l) => match vs.get(0) {
+        Value::List(l) | Value::Tuple(l) => match vs.get(0) {
             Some(value) => match value {
                 Value::Int(i) => {
                     if let Some(val) = l.get(*i as usize) {
