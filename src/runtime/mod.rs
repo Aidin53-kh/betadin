@@ -9,6 +9,9 @@ pub mod lib;
 pub mod prototypes;
 pub mod value;
 
+pub use lib::Lib;
+pub use prototypes::Prototypes;
+
 #[derive(Debug, Clone)]
 pub struct ScopeStack(Vec<Arc<Mutex<Scope>>>);
 
@@ -32,7 +35,7 @@ impl ScopeStack {
         ScopeStack::new(scopes)
     }
 
-    fn declare(&mut self, name: String, value: Value, decl_type: DeclType) -> Result<(), String> {
+    fn declare(&mut self, name: &String, value: Value, decl_type: DeclType) -> Result<(), String> {
         let mut current_scope = self
             .0
             .last()
@@ -48,7 +51,7 @@ impl ScopeStack {
                 if keys.contains(&prop.key) {
                     return Err(format!("duplicate property '{}'", prop.key));
                 }
-                keys.push(prop.key.clone());
+                keys.push(prop.key.to_string());
             }
 
             let res = props
@@ -63,10 +66,10 @@ impl ScopeStack {
             }
         }
 
-        if current_scope.contains_key(&name) {
+        if current_scope.contains_key(name) {
             return Err(format!("'{}' already define in this scope", name));
         }
-        current_scope.insert(name, (value, decl_type));
+        current_scope.insert(name.to_string(), (value, decl_type));
 
         Ok(())
     }
@@ -78,7 +81,7 @@ impl ScopeStack {
                 if let DeclType::Immutable = v.1 {
                     return Err(format!("cannot mutate a immutable item '{}'", name));
                 }
-                unlocked_scope.insert(name.clone(), (value.clone(), DeclType::Mutable));
+                unlocked_scope.insert(name, (value, DeclType::Mutable));
                 return Ok(());
             }
         }

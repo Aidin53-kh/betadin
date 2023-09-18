@@ -1,5 +1,7 @@
-use crate::ast::Program;
-use crate::runtime::prototypes::Prototypes;
+use std::collections::HashMap;
+
+use crate::runtime::value::Value;
+use crate::{ast::Program, runtime::value::Type};
 use crate::runtime::ScopeStack;
 
 use super::statement::{eval_statements, Escape};
@@ -7,9 +9,9 @@ use super::statement::{eval_statements, Escape};
 pub fn eval_program(
     scopes: &mut ScopeStack,
     program: Program,
-    prototypes: Prototypes,
+    prototypes: &HashMap<Type, HashMap<String, Value>>,
 ) -> Result<Escape, String> {
-    let e = eval_statements(scopes, program.statements, prototypes)?;
+    let e = eval_statements(scopes, &program.statements, prototypes)?;
 
     if let Escape::Return(_) = e {
         return Err(format!("return outside of function"));

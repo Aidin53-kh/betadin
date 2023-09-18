@@ -1,8 +1,9 @@
 use std::fs;
 use std::sync::{Arc, Mutex};
 
-use runtime::eval::program::eval_program;
-use runtime::lib::Lib;
+use runtime::eval::eval_program;
+use runtime::Lib;
+use runtime::Prototypes;
 use runtime::ScopeStack;
 
 #[macro_use]
@@ -22,7 +23,7 @@ fn main() -> Result<(), String> {
     let parser = grammar::programParser::new();
     let ast = parser.parse(&code).expect("unable to parse the grammar");
     // println!("{:#?}", ast);
-    eval_program(&mut scopes, ast, runtime::prototypes::prototypes())?;
+    eval_program(&mut scopes, ast, &Prototypes::exports())?;
     // println!("{:#?}", scopes);
     Ok(())
 }

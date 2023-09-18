@@ -35,7 +35,8 @@ mod ak_collections {
             Some(value) => {
                 if let Value::List(list) = value {
                     let mut set = Vec::new();
-                    for val in list.clone() {
+                    let list = list.to_vec();
+                    for val in list {
                         if !set.contains(&val) {
                             set.push(val);
                         }

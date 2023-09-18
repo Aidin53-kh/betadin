@@ -76,7 +76,7 @@ pub fn _obj_set(vs: Vec<Value>, this: Value) -> Result<Value, String> {
                                 value: arg2.clone(),
                             });
                         }
-                        
+
                         for prop in &obj {
                             if &prop.key == arg1 {
                                 new_obj.push(KeyValue {
