@@ -17,7 +17,6 @@ pub fn list_proto() -> HashMap<String, Value> {
     list_proto.insert(String::from("rev"), Value::BuiltInMethod(_rev, None));
     list_proto.insert(String::from("join"), Value::BuiltInMethod(_join, None));
     list_proto.insert(String::from("clear"), Value::BuiltInMethod(_clear, None));
-    list_proto.insert(String::from("find"), Value::BuiltInMethod(_find, None));
     list_proto.insert(
         String::from("contains"),
         Value::BuiltInMethod(_contains, None),
@@ -163,52 +162,6 @@ pub fn _clear(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         Value::Object(_) => Ok(Value::Object(vec![])),
         _ => Err(format!(
             "clear() dose not exist in {:?} prototype",
-            Type::from(&this)
-        )),
-    }
-}
-
-pub fn _find(vs: Vec<Value>, this: Value) -> Result<Value, String> {
-    if vs.len() > 1 || vs.len() < 1 {
-        return Err(format!("expected 1 argument, but found {}", vs.len()));
-    }
-
-    match this {
-        Value::List(list) => match vs.get(0) {
-            Some(value) => match value {
-                Value::Func(args, block) => {
-                    let mut scopes = ScopeStack::new(vec![Arc::new(Mutex::new(HashMap::new()))]);
-
-                    let item = list.iter().find(|i| {
-                        if let Some(arg1) = args.get(0) {
-                            let value = i.to_owned().to_owned();
-                            scopes.declare(arg1, value, DeclType::Immutable).unwrap();
-                        }
-
-                        let ret = eval_statements(&mut scopes, block, &Prototypes::exports()).unwrap();
-                        
-                        if let Escape::Return(val) = ret {
-                            match val {
-                                Value::Bool(b) => {
-                                    return b;
-                                }
-                                _ => {
-                                    panic!("the first argument of find method most returns a boolean");
-                                }
-                            }
-                        }
-
-                        panic!("the first argument of find method most returns a boolean");
-                    });
-
-                    Ok(Value::Null)
-                }
-                _ => return Err(format!("the first argument most be a function")),
-            },
-            None => Err(format!("expected 1 argument, but found {}", vs.len())),
-        },
-        _ => Err(format!(
-            "find() dose not exist in '{:?}' prototype",
             Type::from(&this)
         )),
     }
