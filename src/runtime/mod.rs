@@ -36,6 +36,7 @@ impl ScopeStack {
     }
 
     fn declare(&mut self, name: &String, value: Value, decl_type: DeclType) -> Result<(), String> {
+
         let mut current_scope = self
             .0
             .last()

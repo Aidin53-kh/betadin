@@ -10,56 +10,42 @@ pub program: Program = {
 }
 
 statement: Statement = {
-    let_statement,
-    import_statement,
-    expr_statement,
-    assign_statement,
+    <expr:expr> ";" => Statement::Expression(expr),
+    <name:identifier> "=" <rhs:expr> ";" => Statement::Assignment(name, rhs),
+    "let" <name:identifier> "=" <rhs:expr> ";" => Statement::Let(name, rhs),
+    "const" <name:identifier> "=" <rhs:expr> ";" => Statement::Const(name, rhs),
+    "fn" <name:identifier> "(" <params:params> ")" <block:block> => Statement::Fn(name, params, block),
+    "return" <expr:expr> ";" => Statement::Return(expr),
+    "import" <args:import_args> ";" => Statement::Import(args, None),
+    "import" <args:import_args> "::" "{" <names:params> "}" ";" => Statement::Import(args, Some(names)),
+    "for" <lhs:identifier> "in" <iter:expr> <block:block> => Statement::For(lhs, iter, block),
+    "break" ";" => Statement::Break,
+    "continue" ";" => Statement::Continue,
+    "while" <cond:expr> <block:block> => Statement::While(cond, block),
+    "module" <name:identifier> <block:block> => Statement::Module(name, block),
     if_statement,
-    ret_statement,
-    fn_statement,
-    for_statement,
-    break_statement,
-    continue_statement,
-    while_statement,
-    const_statement,
-    module_statement
 }
 
-import_statement: Statement = {
-    "import" <args:import_args> ";" => Statement::ImportStatement(args, None),
-    "import" <args:import_args> "::" "{" <names:params> "}" ";" => Statement::ImportStatement(args, Some(names))
-};
-let_statement: Statement = "let" <name:identifier> "=" <rhs:expr> ";" => Statement::LetStatement(name, rhs);
-const_statement: Statement = "const" <name:identifier> "=" <rhs:expr> ";" => Statement::ConstStatement(name, rhs);
-expr_statement: Statement = <expr:expr> ";" => Statement::ExpressionStatement(expr);
-assign_statement: Statement = <name:identifier> "=" <rhs:expr> ";" => Statement::AssignmentStatement(name, rhs);
-ret_statement: Statement = "return" <expr:expr> ";" => Statement::ReturnStatement(expr);
-fn_statement: Statement = "fn" <name:identifier> "(" <params:params> ")" <block:block> => Statement::FnStatement(name, params, block);
-for_statement: Statement = "for" <lhs:identifier> "in" <iter:expr> <block:block> => Statement::ForStatement(lhs, iter, block);
-break_statement: Statement = "break" ";" => Statement::BreakStatement;
-continue_statement: Statement = "continue" ";" => Statement::ContinueStatement;
-while_statement: Statement = "while" <cond:expr> <block:block> => Statement::WhileStatement(cond, block);
-module_statement: Statement = "module" <name:identifier> <block:module_block> => Statement::ModuleStatement(name, block);
 if_statement: Statement = {
-    "if" <cond:expr> <if_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], None),
-    "if" <cond:expr> <if_block:block> "else" <else_block:block> => Statement::IfStatement(vec![Branch::new(cond, if_block)], Some(else_block)),
+    "if" <cond:expr> <if_block:block> => Statement::If(vec![Branch::new(cond, if_block)], None),
+    "if" <cond:expr> <if_block:block> "else" <else_block:block> => Statement::If(vec![Branch::new(cond, if_block)], Some(else_block)),
     "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_statement> => {
-        if let Statement::IfStatement(mut branches, else_stmt) = else_if_stmts {
+        if let Statement::If(mut branches, else_stmt) = else_if_stmts {
             branches.insert(0, Branch::new(cond, if_block));
-            return Statement::IfStatement(branches, else_stmt);
+            return Statement::If(branches, else_stmt);
         } else {
             panic!("grammar error: if statement");
         }
     }
 }
 
-if_expr: Expression = {
-    "if" <cond:expr> <if_block:block> => Expression::If(vec![Branch::new(cond, if_block)], None),
-    "if" <cond:expr> <if_block:block> "else" <else_block:block> => Expression::If(vec![Branch::new(cond, if_block)], Some(else_block)),
+if_expr: Expr = {
+    "if" <cond:expr> <if_block:block> => Expr::If(vec![Branch::new(cond, if_block)], None),
+    "if" <cond:expr> <if_block:block> "else" <else_block:block> => Expr::If(vec![Branch::new(cond, if_block)], Some(else_block)),
     "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_expr> => {
-        if let Expression::If(mut branches, else_stmt) = else_if_stmts {
+        if let Expr::If(mut branches, else_stmt) = else_if_stmts {
             branches.insert(0, Branch::new(cond, if_block));
-            return Expression::If(branches, else_stmt);
+            return Expr::If(branches, else_stmt);
         } else {
             panic!("grammar error: if statement");
         }
@@ -71,68 +57,71 @@ import_args: Vec<String> = {
     <name:identifier> => vec![name],
 }
 
-expr: Expression = {
+expr: Expr = {
     expr_1
 }
 
-expr_1: Expression = {
-    <lhs:expr> "||" <rhs:expr_2> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Or, Box::new(rhs)),
-    <lhs:expr> "&&" <rhs:expr_2> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::And, Box::new(rhs)),
+expr_1: Expr = {
+    <lhs:expr> "||" <rhs:expr_2> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::Or, Box::new(rhs)),
+    <lhs:expr> "&&" <rhs:expr_2> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::And, Box::new(rhs)),
     expr_2
 }
 
-expr_2: Expression = {
-     <lhs:expr_2> "==" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::EQ, Box::new(rhs)),
-     <lhs:expr_2> "!=" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::NE, Box::new(rhs)),
-     <lhs:expr_2> ">" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::GT, Box::new(rhs)),
-     <lhs:expr_2> "<" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::LT, Box::new(rhs)),
-     <lhs:expr_2> ">=" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::GTE, Box::new(rhs)),
-     <lhs:expr_2> "<=" <rhs:expr_3> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::LTE, Box::new(rhs)),
+expr_2: Expr = {
+    <start:expr_4> ".." <end:expr_4> => Expr::Range(Box::new(start), Box::new(end)),
+
+     <lhs:expr_2> "==" <rhs:expr_3> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::EQ, Box::new(rhs)),
+     <lhs:expr_2> "!=" <rhs:expr_3> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::NE, Box::new(rhs)),
+     <lhs:expr_2> ">" <rhs:expr_3> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::GT, Box::new(rhs)),
+     <lhs:expr_2> "<" <rhs:expr_3> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::LT, Box::new(rhs)),
+     <lhs:expr_2> ">=" <rhs:expr_3> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::GTE, Box::new(rhs)),
+     <lhs:expr_2> "<=" <rhs:expr_3> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::LTE, Box::new(rhs)),
      expr_3
 }
 
-expr_3: Expression = {
-    <lhs:expr_3> "+" <rhs:expr_4> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Add, Box::new(rhs)),
-    <lhs:expr_3> "-" <rhs:expr_4> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Sub, Box::new(rhs)),
+expr_3: Expr = {
+    <lhs:expr_3> "+" <rhs:expr_4> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::Add, Box::new(rhs)),
+    <lhs:expr_3> "-" <rhs:expr_4> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::Sub, Box::new(rhs)),
     expr_4
 }
 
-expr_4: Expression = {
-    "!" <expr:expr_5> => Expression::UnaryOp(UnaryOpKind::Not, Box::new(expr)),   
-    "typeof" <expr:expr_5> => Expression::UnaryOp(UnaryOpKind::Typeof, Box::new(expr)),
-    "fn" "(" <params:params> ")" <block:block>  => Expression::Fn(params, block),
-    "module" <block:module_block> => Expression::Module(block),
+expr_4: Expr = {
+    "!" <expr:expr_5> => Expr::UnaryOp(UnaryOpKind::Not, Box::new(expr)),   
+    "typeof" <expr:expr_5> => Expr::UnaryOp(UnaryOpKind::Typeof, Box::new(expr)),
+    "fn" "(" <params:params> ")" <block:block>  => Expr::Fn(params, block),
+    "module" <block:block> => Expr::Module(block),
+
     if_expr,
         
-    <lhs:expr_4> "*" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Mul, Box::new(rhs)),
-    <lhs:expr_4> "/" <rhs:expr_5> => Expression::BinaryOp(Box::new(lhs), BinaryOpKind::Div, Box::new(rhs)),
+    <lhs:expr_4> "*" <rhs:expr_5> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::Mul, Box::new(rhs)),
+    <lhs:expr_4> "/" <rhs:expr_5> => Expr::BinaryOp(Box::new(lhs), BinaryOpKind::Div, Box::new(rhs)),
     expr_5
 }
 
-expr_5: Expression = {
-    <head:import_args> "::" <tail:expr_6> => Expression::ModuleCall(head, Box::new(tail)),
+expr_5: Expr = {
+    <head:import_args> "::" <tail:expr_6> => Expr::ModuleCall(head, Box::new(tail)),
     
     expr_6
 }
 
-expr_6: Expression = {
-    <head:expr_6> "." <tail:expr_7> => Expression::MethodCall(Box::new(head), Box::new(tail)),
-    <head:expr_6> "[" <tail:expr> "]" => Expression::Index(Box::new(head), Box::new(tail)),
-    <expr:expr_6> "(" <args:args> ")" => Expression::Call(Box::new(expr), args),
-    "{" <props:props> ","? "}" => Expression::Object(props),
-    "(" <expr:expr> "," <exprs:args> ")" => Expression::Tuple(append(exprs, expr)),
+expr_6: Expr = {
+    <head:expr_6> "." <tail:expr_7> => Expr::MethodCall(Box::new(head), Box::new(tail)),
+    <head:expr_6> "[" <tail:expr> "]" => Expr::Index(Box::new(head), Box::new(tail)),
+    <expr:expr_6> "(" <args:args> ")" => Expr::Call(Box::new(expr), args),
+    "{" <props:props> ","? "}" => Expr::Object(props),
+    "(" <expr:expr> "," <exprs:args> ")" => Expr::Tuple(append(exprs, expr)),
 
     expr_7
 }
 
-expr_7: Expression = {
-    "null" => Expression::Null,
-    <n:int> => Expression::Int(n),
-    <f:float> => Expression::Float(f),
-    <s:string> => Expression::String(s),
-    <b:bool> => Expression::Bool(b),
-    <l:list> => Expression::List(l),
-    <name:identifier> => Expression::Identifier(name),
+expr_7: Expr = {
+    "null" => Expr::Null,
+    <n:int> => Expr::Int(n),
+    <f:float> => Expr::Float(f),
+    <s:string> => Expr::String(s),
+    <b:bool> => Expr::Bool(b),
+    <l:list> => Expr::List(l),
+    <name:identifier> => Expr::Identifier(name),
     "(" <expr:expr> ")" => expr
 }
 
@@ -146,7 +135,7 @@ prop: Prop = {
     <key:identifier> ":" <value:expr> => Prop { key, value }
 }
 
-args: Vec<Expression> = {
+args: Vec<Expr> = {
     () => vec![],
     <args:args> "," <e:expr> => append(args, e),
     <e:expr> => vec![e]
@@ -156,17 +145,6 @@ params: Vec<String> = {
     () => vec![],
     <params:params> "," <param:identifier> => append(params, param),
     <param:identifier> => vec![param]
-}
-
-module_block_statement: Statement = {
-    let_statement,
-    const_statement,
-    fn_statement,
-    module_statement,
-}
-
-module_block: Block = {
-    "{" <stmts:module_block_statement*> "}" => stmts,
 }
 
 block: Block = {
@@ -185,7 +163,7 @@ string: String = {
     <s:r#""[^"]*""#> => s[1..s.len() - 1].to_owned()
 };
 
-list: Vec<Expression> = {
+list: Vec<Expr> = {
     "[" <head:args> "]" => head,
 }
 
@@ -215,6 +193,7 @@ match {
     "||", 
     "&&", 
     ".", 
+    "..",
     "<=", 
     ">=", 
     "+", 

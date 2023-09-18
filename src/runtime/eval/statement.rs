@@ -20,18 +20,18 @@ pub fn eval_statement(
     prototypes: &HashMap<Type, HashMap<String, Value>>,
 ) -> Result<Escape, String> {
     match statement {
-        Statement::ExpressionStatement(expr) => {
+        Statement::Expression(expr) => {
             eval_expression(scopes, expr, prototypes)?;
         }
-        Statement::LetStatement(name, rhs) => {
+        Statement::Let(name, rhs) => {
             let value = eval_expression(scopes, rhs, prototypes)?;
             scopes.declare(name, value, DeclType::Mutable)?;
         }
-        Statement::ConstStatement(name, rhs) => {
+        Statement::Const(name, rhs) => {
             let value = eval_expression(scopes, rhs, prototypes)?;
             scopes.declare(name, value, DeclType::Immutable)?;
         }
-        Statement::ImportStatement(args, items) => {
+        Statement::Import(args, items) => {
             let module = get_module(scopes, args)?;
 
             match items {
@@ -50,11 +50,11 @@ pub fn eval_statement(
             }
             // apply_imports(scopes, modules, args, items)?;
         }
-        Statement::AssignmentStatement(name, rhs) => {
+        Statement::Assignment(name, rhs) => {
             let value = eval_expression(scopes, rhs, prototypes)?;
             scopes.assgin(name.to_string(), value)?;
         }
-        Statement::IfStatement(branchs, else_block) => {
+        Statement::If(branchs, else_block) => {
             for branch in branchs {
                 let value = eval_expression(scopes, &branch.condition, prototypes)?;
 
@@ -74,18 +74,18 @@ pub fn eval_statement(
                 return Ok(e);
             }
         }
-        Statement::ReturnStatement(expr) => {
+        Statement::Return(expr) => {
             let value = eval_expression(scopes, expr, prototypes)?;
             return Ok(Escape::Return(value));
         }
-        Statement::FnStatement(name, args, block) => {
+        Statement::Fn(name, args, block) => {
             scopes.declare(
                 name,
                 Value::Func(args.to_vec(), block.to_vec()),
                 DeclType::Immutable,
             )?;
         }
-        Statement::ForStatement(lhs, iter, block) => {
+        Statement::For(lhs, iter, block) => {
             let iter_val = eval_expression(scopes, iter, prototypes)?;
 
             match iter_val {
@@ -107,9 +107,9 @@ pub fn eval_statement(
                 _ => return Err(format!("iterator most be a list")),
             }
         }
-        Statement::BreakStatement => return Ok(Escape::Break),
-        Statement::ContinueStatement => return Ok(Escape::Continue),
-        Statement::WhileStatement(cond, block) => loop {
+        Statement::Break => return Ok(Escape::Break),
+        Statement::Continue => return Ok(Escape::Continue),
+        Statement::While(cond, block) => loop {
             let value = eval_expression(scopes, cond, prototypes)?;
 
             match value {
@@ -130,7 +130,7 @@ pub fn eval_statement(
                 _ => return Err(format!("condition most be a boolean")),
             }
         },
-        Statement::ModuleStatement(name, statements) => {
+        Statement::Module(name, statements) => {
             let module = eval_module(scopes, prototypes, name, statements)?;
 
             scopes.declare(name, Value::Module(module), DeclType::Immutable)?;
@@ -150,7 +150,7 @@ pub fn eval_statements(
     for statement in statements {
         let e = eval_statement(&mut inner_scopes, statement, prototypes)?;
 
-        if let Statement::FnStatement(_, _, _) = statement {
+        if let Statement::Fn(_, _, _) = statement {
             continue;
         }
 
@@ -175,20 +175,20 @@ pub fn eval_module(
     let mut inner_scope = scopes.new_from_push(HashMap::new());
     for statement in statements {
         match statement {
-            Statement::ConstStatement(name, expr) => {
+            Statement::Const(name, expr) => {
                 let value = eval_expression(&mut inner_scope, expr, prototypes)?;
 
                 exports.insert(name.to_string(), value);
             }
-            Statement::LetStatement(name, expr) => {
+            Statement::Let(name, expr) => {
                 let value = eval_expression(&mut inner_scope, expr, prototypes)?;
 
                 exports.insert(name.to_string(), value);
             }
-            Statement::FnStatement(name, args, block) => {
+            Statement::Fn(name, args, block) => {
                 exports.insert(name.to_string(), Value::Func(args.to_vec(), block.to_vec()));
             }
-            Statement::ModuleStatement(name2, statements2) => {
+            Statement::Module(name2, statements2) => {
                 let exports2 = eval_module(&mut inner_scope, prototypes, name2, statements2)?;
                 exports.insert(name.to_string(), Value::Module(exports2));
             }

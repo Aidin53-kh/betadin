@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 
-use crate::ast::{BinaryOpKind, Expression, UnaryOpKind};
+use crate::ast::{BinaryOpKind, Expr, UnaryOpKind};
 use crate::runtime::value::{KeyValue, Type, Value};
 use crate::runtime::{DeclType, ScopeStack};
 
@@ -8,16 +8,16 @@ use super::statement::{eval_module, eval_statements, Escape};
 
 pub fn eval_expression(
     scopes: &mut ScopeStack,
-    expression: &Expression,
+    expression: &Expr,
     prototypes: &HashMap<Type, HashMap<String, Value>>,
 ) -> Result<Value, String> {
     match expression {
-        Expression::Null => Ok(Value::Null),
-        Expression::Int(n) => Ok(Value::Int(*n)),
-        Expression::Float(n) => Ok(Value::Float(*n)),
-        Expression::String(s) => Ok(Value::String(s.to_string())),
-        Expression::Bool(b) => Ok(Value::Bool(*b)),
-        Expression::List(list) => {
+        Expr::Null => Ok(Value::Null),
+        Expr::Int(n) => Ok(Value::Int(*n)),
+        Expr::Float(n) => Ok(Value::Float(*n)),
+        Expr::String(s) => Ok(Value::String(s.to_string())),
+        Expr::Bool(b) => Ok(Value::Bool(*b)),
+        Expr::List(list) => {
             let mut values: Vec<Value> = Vec::new();
 
             for expr in list {
@@ -28,7 +28,7 @@ pub fn eval_expression(
 
             Ok(Value::List(values))
         }
-        Expression::Call(expr, args) => {
+        Expr::Call(expr, args) => {
             let value = eval_expression(scopes, &expr, &prototypes)?;
 
             match value {
@@ -100,15 +100,15 @@ pub fn eval_expression(
                 }
             }
         }
-        Expression::Identifier(name) => match scopes.get(&name) {
+        Expr::Identifier(name) => match scopes.get(&name) {
             Some(v) => Ok(v),
             None => Err(format!("{} is not defied (8)", name)),
         },
-        Expression::MethodCall(object, calle) => {
+        Expr::MethodCall(object, calle) => {
             let obj_value = eval_expression(scopes, &*object, &prototypes)?;
 
             match *calle.clone() {
-                Expression::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
+                Expr::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
                     Some(proto) => match proto.get(&name) {
                         Some(value) => {
                             if let Value::BuiltInMethod(f, _) = value {
@@ -138,8 +138,8 @@ pub fn eval_expression(
                         ));
                     }
                 },
-                Expression::Call(expr, args) => match *expr {
-                    Expression::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
+                Expr::Call(expr, args) => match *expr {
+                    Expr::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
                         Some(proto) => match proto.get(&name) {
                             Some(value) => match value {
                                 Value::BuiltInMethod(f, _) => {
@@ -183,7 +183,7 @@ pub fn eval_expression(
                         ));
                     }
                 },
-                Expression::Index(_, _) => todo!(),
+                Expr::Index(_, _) => todo!(),
                 _ => {
                     return Err(format!(
                         "value of type {:?} not callable (1)",
@@ -192,7 +192,7 @@ pub fn eval_expression(
                 }
             }
         }
-        Expression::Index(expr, loc) => {
+        Expr::Index(expr, loc) => {
             let expr_value = eval_expression(scopes, &*expr, &prototypes)?;
 
             match &expr_value {
@@ -244,7 +244,7 @@ pub fn eval_expression(
                 }
             }
         }
-        Expression::BinaryOp(lhs_expr, op, rhs_expr) => {
+        Expr::BinaryOp(lhs_expr, op, rhs_expr) => {
             let lhs = eval_expression(scopes, &*lhs_expr, &prototypes)?;
             let rhs = eval_expression(scopes, &*rhs_expr, &prototypes)?;
 
@@ -285,7 +285,7 @@ pub fn eval_expression(
 
             res
         }
-        Expression::UnaryOp(op, expr) => {
+        Expr::UnaryOp(op, expr) => {
             let value = eval_expression(scopes, &*expr, prototypes)?;
 
             match op {
@@ -293,7 +293,7 @@ pub fn eval_expression(
                 UnaryOpKind::Typeof => Ok(Value::String(Type::from(&value).to_string())),
             }
         }
-        Expression::Object(props) => {
+        Expr::Object(props) => {
             let mut values: Vec<KeyValue> = Vec::new();
 
             for prop in props {
@@ -307,8 +307,8 @@ pub fn eval_expression(
 
             Ok(Value::Object(values))
         }
-        Expression::Fn(args, block) => Ok(Value::Func(args.to_vec(), block.to_vec())),
-        Expression::ModuleCall(paths, expr) => {
+        Expr::Fn(args, block) => Ok(Value::Func(args.to_vec(), block.to_vec())),
+        Expr::ModuleCall(paths, expr) => {
             let module = get_module(scopes, paths)?;
 
             let mut inner_scopes = scopes.new_from_push(HashMap::new());
@@ -320,11 +320,11 @@ pub fn eval_expression(
             let value = eval_expression(&mut inner_scopes, &*expr, &prototypes)?;
             Ok(value)
         }
-        Expression::Module(statements) => {
+        Expr::Module(statements) => {
             let module = eval_module(scopes, prototypes, &String::from("test"), statements)?;
             Ok(Value::Module(module))
         }
-        Expression::If(branchs, else_block) => {
+        Expr::If(branchs, else_block) => {
             for branch in branchs {
                 let value = eval_expression(scopes, &branch.condition, &prototypes)?;
 
@@ -352,7 +352,7 @@ pub fn eval_expression(
 
             Ok(Value::Null)
         }
-        Expression::Tuple(exprs) => {
+        Expr::Tuple(exprs) => {
             let mut values = Vec::new();
 
             for expr in exprs {
@@ -361,6 +361,26 @@ pub fn eval_expression(
             }
 
             Ok(Value::Tuple(values))
+        }
+        Expr::Range(start, end) => {
+            let start = eval_expression(scopes, &start, prototypes)?;
+            let end = eval_expression(scopes, &end, prototypes)?;
+
+            match start {
+                Value::Int(s) => match end {
+                    Value::Int(e) => {
+                        let mut list = Vec::new();
+
+                        for num in s..=e {
+                            list.push(Value::Int(num));
+                        }
+
+                        return Ok(Value::List(list));
+                    }
+                    other => return Err(format!("extected integer, found {}", Type::from(&other))),
+                },
+                other => return Err(format!("expected integer, found {}", Type::from(&other))),
+            }
         }
     }
 }
