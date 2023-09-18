@@ -190,7 +190,7 @@ pub fn eval_module(
             }
             Statement::Module(name2, statements2) => {
                 let exports2 = eval_module(&mut inner_scope, prototypes, name2, statements2)?;
-                exports.insert(name.to_string(), Value::Module(exports2));
+                exports.insert(name2.to_string(), Value::Module(exports2));
             }
             other => return Err(format!("'{:?}' is not supported in modules", other)),
         }
