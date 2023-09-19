@@ -1,7 +1,11 @@
 [package]
-name = "lalrpop-test2"
+name = "betadin"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+repository = "https://github.com/Aidin53-kh"
+authors = ["aidin"]
+description = "a programing language for research"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
