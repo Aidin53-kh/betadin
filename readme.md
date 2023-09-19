@@ -1,109 +1,126 @@
-v 0.1.0:
-        1. variable declerations                                                [pass]
-        2. arithmatic operators => + - / *                                      [pass]
-        3. relational operators => == > < !=                                    [pass]
-        4. logical operators => && ||                                           [pass]
-        5. int literal                                                          [pass]
-        6. string literal                                                       [pass]
-        7. float litral                                                         [pass]
-        8. boolean literal                                                      [pass]
-        9. builtin functions                                                    [pass]
-        10. builtin modules                                                     [pass]
-        11. unary operators => !true                                            [pass]
-        12. function calls                                                      [pass]
-        13. variable assignment                                                 [pass]
+# Betadin
 
-v 0.2.0:
-        1. type methods => x.to_string();                                       [pass]
-        2. named imports => use std::collections::{map, set};                   [faild]
-        3. function declarations                                                [pass]
-        4. const declarations                                                   [pass]
-        5. for statement                                                        [pass]
-        6. while statement                                                      [pass]
-        7. if statement                                                         [pass]
-        8. object literal                                                       [pass]
-        9. return statement                                                     [pass]
-        10. block scope variables                                               [pass]
-        11. array and string indexing => [1,2,4][0] "aidin"[3] x[i]             [pass]
-        12. comments => # only single line comment                              [pass]     
-        13. break statement                                                     [pass]
-        14. continue statement                                                  [pass]
-        15. .to_string() in all prototypes                                      [pass]
-        16. list.len()                                                          [pass]
-        17. list.push()                                                         [pass]
-        18. list.at()                                                           [pass]
-        19. string.at()                                                         [pass]
-        20. string.len()                                                        [pass]
-        21. int.pow()                                                           [pass]
-        22. float.pow()                                                         [pass]
-        23. obj.get()                                                           [pass]
+betadin is a simple programing language for research purposes, written in rust.
+<br/><br/>
 
-v 0.3.0:
-        1. new std::fs module                                                   [pass]
-        2. module imports as object                                             [pass]
-        3. typeof operator                                                      [pass]
-        4. string.chars()                                                       [pass]
-        5. string.split()                                                       [pass]
-        6. string.to_lower()                                                    [pass]
-        7. string.to_upper()                                                    [pass]
-        8. string.trim()                                                        [pass]
-        9. string.contains()                                                    [pass]
-        10. string.is_ascii()                                                   [pass]
-        11. string.repeat()                                                     [pass]
-        12. string.replace()                                                    [pass]
-        13. string.push()                                                       [pass]
-        14. list.rev()                                                          [pass]
-        15. list.join()                                                         [pass]
-        16. list.pop()                                                          [pass]
-        17. list.contains()                                                     [pass]
-        18. list.clear()                                                        [pass]
-        19. obj.values()                                                        [pass]
-        20. obj.contains()                                                      [pass]
-        21. obj.set()                                                           [pass]
-        22. obj.remove()                                                        [pass]
-        23. obj.clear()                                                         [pass]
-        24. fs::read()                                                          [pass]
-        25. fs::write()                                                         [pass]
-        26. fs::read_dir()                                                      [pass]
-        27. fs::remove()                                                        [pass]
-        28. fs::rename()                                                        [pass]
-        29. fs::remove_dir()                                                    [pass]
+## Features
 
-v 0.4.0
-        1. named imports => use std::collections::{map, set};                   [pass]
-        2. new std::system module                                               [pass]
-        3. new std::env module                                                  [pass]
-        4. system::platform()                                                   [pass]
-        5. system::free_mem()                                                   [pass]
-        6. system::total_mem()                                                  [pass]
-        7. system::free_disk()                                                  [pass]
-        8. system::total_disk()                                                 [pass]
-        9. system::cpus()                                                       [pass]
-        10. system::cpu_speed()                                                 [pass]
-        11. system::version()                                                   [pass]
-        12. system::processes()                                                 [pass]     
-        13. system.arch()                                                       [pass]
-        14. system.family()                                                     [pass]
-        15. env::args()                                                         [pass]
-        16. env::var()                                                          [pass]
-        17. env::vars()                                                         [pass]
-        18. env::set_var()                                                      [pass]
-        19. env::remove_var()                                                   [pass]
-        20. string.lines()                                                      [pass]
-        21. string.to_numeric()                                                 [pass]
+-   variables and constants
+-   functions
+-   conditional commands
+-   common operators
+-   for and while loops
+-   prototypes
+-   builtin modules and functions
+-   and more
 
-v 0.5.0:
-        1. function expressions                                                 [pass]
-        2. module expressions                                                   [pass]
-        3. if expression                                                        [pass]
-        4. range expression                                                     [pass]
-        5. module statements                                                    [pass]
-        6. module calls => fs::write()                                          [pass]
-        7. move old modules to new module structure                             [pass]
-        8. tuple literals => (1, 2 ,3)                                          [pass]
-        9. loop on tuple literals                                               [pass]   
-        10. new import system                                                   [pass]
-        11. tuple accessing by index => x[0]                                    [pass]
-        11. rename `use` keyword to `import`                                    [pass]
-        12. rename `ret` keyword to `return`                                    [pass]
-        13 tuple.at()                                                           [pass]
+<br/>
+
+## Examples
+<br/>
+
+```rust
+
+# variables and constants
+
+let name1 = "something"; # can be change
+const name2 = "something"; # cannot be change
+
+
+
+# functions
+
+fn add(x, y) {
+    return x + y;
+}
+
+println(add(2, 5)); # prints 7;
+
+
+
+# conditional commands and operators
+
+let x = 10;
+
+# if statement
+if x >= 10 || true {
+    println("if block");
+} else {
+    println("else block");
+}
+
+# if expression
+let y = if x == 10 {
+    return "if block";
+} else {
+    return "else block";
+};
+
+println(y); # prints "if block"
+
+
+
+# for and while loops
+
+for i in 1..10 {
+    println(i); # prints 1 to 10
+}
+
+let x = 0;
+while x <= 10 {
+    if x == 5 {
+        break;
+    }
+    println(x); # prints 0 to 4
+    x = x + 1;
+}
+
+
+
+# builtin modules and prototypes
+# betadin have some builtin modules like "fs", "system", "env"
+
+# system module
+
+import std::system;
+println(system::platform());
+
+# or
+
+import std::system::{platform};
+println(platform());
+
+# or 
+
+println(std::system::platform());
+
+# file system
+
+import std::fs;
+
+const content = fs::read_file("path"); # read
+
+# reading file content line
+# file content is a string so we can use string methods
+
+println(content.lines()); # prints array of lines
+println(content.len()); # prints number of chars
+println(content.lines().len()); # prints number of lines;
+
+# more methods
+fs::write_file("path");
+fs::read_dir("path");
+fs::remove_file("path");
+# and more
+
+
+# env module
+
+import std::env;
+const args = env::args(); # getting arguments
+
+for arg in args {
+    println(arg);
+}
+
+```
