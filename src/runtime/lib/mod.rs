@@ -6,15 +6,15 @@ use super::{value::Value, DeclType};
 
 pub mod std;
 
-pub struct Lib(HashMap<String, (Value, DeclType)>);
+pub struct StdLib(HashMap<String, (Value, DeclType)>);
 
-impl Lib {
+impl StdLib {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
 
     pub fn exports() -> HashMap<String, (Value, DeclType)> {
-        let mut lib = Lib::new();
+        let mut lib = StdLib::new();
 
         // builtin modules
         lib.declare("std", Value::Module(Std::exports()));

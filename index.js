@@ -1,4 +1,6 @@
-let x = 0;
+import fs from "node:fs";
+fs.read
+
 
 while (x < 25000) {
     function test(t) {

@@ -9,7 +9,7 @@ pub mod lib;
 pub mod prototypes;
 pub mod value;
 
-pub use lib::Lib;
+pub use lib::StdLib;
 pub use prototypes::Prototypes;
 
 #[derive(Debug, Clone)]

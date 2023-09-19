@@ -1,10 +1,19 @@
-let x = 3;
+module core {
+    const name = "core";
+    const version = "0.5.0";
 
-let g = if x == 0 {
-    println("if");
-} else {
-    println("else");
-    return 39;
-};
+    module fs {
+        fn read_file(path) {
+            import std::fs::{read_file};
 
-println(g);
+            const content = read_file(path);
+            return content;
+        }
+    }
+}
+
+import core::fs;
+
+const x = fs::read_file("readme.md");
+
+println(x);
