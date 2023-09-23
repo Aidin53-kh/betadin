@@ -5,8 +5,7 @@ edition = "2021"
 license = "MIT"
 authors = ["aidin53"]
 description = "A simple programing language for research purposes"
-
-
+repository = "https://github.com/Aidin53-kh/betadin"
 
 [dependencies]
 lalrpop-util = { version = "0.20.0", features = ["lexer"] }
