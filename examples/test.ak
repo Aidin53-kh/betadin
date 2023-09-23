@@ -1,2 +1,3 @@
-import std::fs;
+let x = ["aidin53"] + "aidin53";
 
+println(x);

@@ -89,6 +89,7 @@ impl From<&Value> for Type {
         }
     }
 }
+
 impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -105,6 +106,7 @@ impl Display for Type {
         }
     }
 }
+
 impl From<&Value> for Value {
     fn from(value: &Value) -> Self {
         match value {
@@ -123,6 +125,7 @@ impl From<&Value> for Value {
         }
     }
 }
+
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -141,6 +144,7 @@ impl Display for Value {
         }
     }
 }
+
 impl Not for Value {
     type Output = Result<Value, String>;
 
@@ -154,243 +158,113 @@ impl Not for Value {
         }
     }
 }
+
+
 impl Add for &Value {
     type Output = Result<Value, String>;
 
     fn add(self, rhs: Self) -> Self::Output {
         match self {
-            Value::Null => Err(format!("cannot add null with any thing")),
             Value::Int(lhs) => match rhs {
-                Value::Null => Err(format!("cannot add int with null")),
                 Value::Int(rhs) => Ok(Value::Int(lhs + rhs)),
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 + rhs)),
                 Value::String(rhs) => Ok(Value::String(lhs.to_string() + &rhs)),
-                Value::BuiltInFn(_) => return Err(format!("cannot int with function")),
-                Value::List(_) => todo!(),
-                Value::BuiltInMethod(_, _) => todo!(),
-                Value::Bool(_) => todo!(),
-                Value::Func(_, _) => todo!(),
-                Value::Object(_) => todo!(),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
+                other => Err(format!("cannot add int to {}", Type::from(other))),
             },
             Value::Float(lhs) => match rhs {
-                Value::Null => Err(format!("cannot add float with null")),
                 Value::Int(rhs) => Ok(Value::Float(lhs + *rhs as f32)),
                 Value::Float(rhs) => Ok(Value::Float(lhs + rhs)),
                 Value::String(rhs) => Ok(Value::String(lhs.to_string() + &rhs)),
-                Value::BuiltInFn(_) => return Err(format!("cannot float with function")),
-                Value::List(_) => todo!(),
-                Value::BuiltInMethod(_, _) => todo!(),
-                Value::Bool(_) => todo!(),
-                Value::Func(_, _) => todo!(),
-                Value::Object(_) => todo!(),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
+                other => Err(format!("cannot add float to {}", Type::from(other))),
             },
             Value::String(lhs) => match rhs {
-                Value::Null => Err(format!("cannot add string with null")),
                 Value::Int(rhs) => Ok(Value::String(lhs.to_owned() + &rhs.to_string().to_owned())),
                 Value::Float(rhs) => {
                     Ok(Value::String(lhs.to_owned() + &rhs.to_string().to_owned()))
                 }
                 Value::String(rhs) => Ok(Value::String(lhs.to_owned() + rhs)),
-                Value::BuiltInFn(_) => return Err(format!("cannot add string with function")),
                 Value::List(rhs) => Ok(Value::String(
                     lhs.to_owned() + Value::List(rhs.to_owned()).to_string().as_str(),
                 )),
-                Value::BuiltInMethod(_, _) => todo!(),
-                Value::Bool(_) => todo!(),
-                Value::Func(_, _) => todo!(),
-                Value::Object(_) => todo!(),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
+                other => Err(format!("cannot add stirng to {}", Type::from(other))),
             },
-            Value::BuiltInFn(_) => return Err(format!("cannot add function with anything")),
-            Value::List(_) => todo!(),
-            Value::BuiltInMethod(_, _) => todo!(),
-            Value::Bool(_) => todo!(),
-            Value::Func(_, _) => todo!(),
-            Value::Object(_) => todo!(),
-            Value::Module(_) => todo!(),
-            Value::Tuple(_) => todo!(),
+            other => Err(format!(
+                "cannot add {} to {}",
+                Type::from(other),
+                Type::from(rhs)
+            )),
         }
     }
 }
+
 impl Mul for &Value {
     type Output = Result<Value, String>;
 
     fn mul(self, rhs: Self) -> Self::Output {
         match self {
-            Value::Null => Err(format!("cannot mul null with any thing")),
             Value::Int(lhs) => match rhs {
-                Value::Null => Err(format!("cannot mul int with null")),
                 Value::Int(rhs) => Ok(Value::Int(lhs * rhs)),
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 * rhs)),
-                Value::String(_) => Err(format!("cannot mul int with string")),
-                Value::BuiltInFn(_) => Err(format!("cannot mul int with function")),
-                Value::List(_) => todo!(),
-                Value::BuiltInMethod(_, _) => todo!(),
-                Value::Bool(_) => todo!(),
-                Value::Func(_, _) => todo!(),
-                Value::Object(_) => todo!(),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
+                other => Err(format!("cannot mut int to {}", Type::from(other))),
             },
             Value::Float(lhs) => match rhs {
-                Value::Null => Err(format!("cannot mul float with null")),
                 Value::Int(rhs) => Ok(Value::Float(lhs * *rhs as f32)),
                 Value::Float(rhs) => Ok(Value::Float(lhs * rhs)),
-                Value::String(_) => Err(format!("cannot mul float with string")),
-                Value::BuiltInFn(_) => return Err(format!("cannot nul float with function")),
-                Value::List(_) => todo!(),
-                Value::BuiltInMethod(_, _) => todo!(),
-                Value::Bool(_) => todo!(),
-                Value::Func(_, _) => todo!(),
-                Value::Object(_) => todo!(),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
+                other => Err(format!("cannot mut float to {}", Type::from(other))),
             },
-            Value::Module(_) => todo!(),
-            Value::String(_) => match rhs {
-                Value::Null => Err(format!("cannot mul string with null")),
-                Value::Int(_) => Err(format!("cannot mul string with int")),
-                Value::Float(_) => Err(format!("cannot mul string with float")),
-                Value::String(_) => Err(format!("cannot mul string with string")),
-                Value::BuiltInFn(_) => return Err(format!("cannot mul string with function")),
-                Value::List(_) => todo!(),
-                Value::BuiltInMethod(_, _) => todo!(),
-                Value::Bool(_) => todo!(),
-                Value::Func(_, _) => todo!(),
-                Value::Object(_) => todo!(),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
-            },
-            Value::BuiltInFn(_) => return Err(format!("cannot mul function with anything")),
-            Value::List(_) => todo!(),
-            Value::BuiltInMethod(_, _) => todo!(),
-            Value::Bool(_) => todo!(),
-            Value::Func(_, _) => todo!(),
-            Value::Object(_) => todo!(),
-            Value::Tuple(_) => todo!(),
+            other => Err(format!(
+                "cannot mut {} to {}",
+                Type::from(other),
+                Type::from(rhs)
+            )),
         }
     }
 }
+
 impl Div for &Value {
     type Output = Result<Value, String>;
 
     fn div(self, rhs: Self) -> Self::Output {
         match self {
-            Value::Null => Err(format!("cannot div null with any thing")),
             Value::Int(lhs) => match rhs {
-                Value::Null => Err(format!("cannot div int with null")),
                 Value::Int(rhs) => Ok(Value::Int(lhs / rhs)),
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 / rhs)),
-                Value::String(_) => Err(format!("cannot div int with string")),
-                Value::BuiltInFn(_) => Err(format!("cannot div int with function")),
-                Value::List(_) => Err(format!("cannot div int with list")),
-                Value::BuiltInMethod(_, _) => Err(format!("cannot div int with function")),
-                Value::Bool(_) => Err(format!("cannot div int with bool")),
-                Value::Func(_, _) => Err(format!("cannot div int with function")),
-                Value::Object(_) => Err(format!("cannot div int with object")),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
+                other => Err(format!("cannot div int to {}", Type::from(other))),
             },
             Value::Float(lhs) => match rhs {
-                Value::Null => Err(format!("cannot div float with null")),
                 Value::Int(rhs) => Ok(Value::Float(lhs / *rhs as f32)),
                 Value::Float(rhs) => Ok(Value::Float(lhs / rhs)),
-                Value::String(_) => Err(format!("cannot div float with string")),
-                Value::BuiltInFn(_) => return Err(format!("cannot div float with function")),
-                Value::List(_) => Err(format!("cannot div float with list")),
-                Value::BuiltInMethod(_, _) => Err(format!("cannot div float with function")),
-                Value::Bool(_) => Err(format!("cannot div float with bool")),
-                Value::Func(_, _) => Err(format!("cannot div float with function")),
-                Value::Object(_) => Err(format!("cannot div float with object")),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
+                other => Err(format!("cannot div float to {}", Type::from(other))),
             },
-            Value::String(_) => match rhs {
-                Value::Null => Err(format!("cannot div string with null")),
-                Value::Int(_) => Err(format!("cannot div string with int")),
-                Value::Float(_) => Err(format!("cannot div string with float")),
-                Value::String(_) => Err(format!("cannot div string with string")),
-                Value::BuiltInFn(_) => return Err(format!("cannot div string with function")),
-                Value::List(_) => Err(format!("cannot div string with list")),
-                Value::BuiltInMethod(_, _) => Err(format!("cannot div string with function")),
-                Value::Bool(_) => Err(format!("cannot div string with bool")),
-                Value::Func(_, _) => Err(format!("cannot div string with function")),
-                Value::Object(_) => Err(format!("cannot div string with object")),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
-            },
-            Value::BuiltInFn(_) => return Err(format!("cannot div function with anything")),
-            Value::List(_) => todo!(),
-            Value::BuiltInMethod(_, _) => todo!(),
-            Value::Bool(_) => todo!(),
-            Value::Func(_, _) => todo!(),
-            Value::Object(_) => todo!(),
-            Value::Module(_) => todo!(),
-            Value::Tuple(_) => todo!(),
+            other => Err(format!(
+                "cannot div {} to {}",
+                Type::from(other),
+                Type::from(rhs)
+            )),
         }
     }
 }
+
 impl Sub for &Value {
     type Output = Result<Value, String>;
 
     fn sub(self, rhs: Self) -> Self::Output {
         match self {
-            Value::Null => Err(format!("cannot sub null with any thing")),
             Value::Int(lhs) => match rhs {
-                Value::Null => Err(format!("cannot sub int with null")),
                 Value::Int(rhs) => Ok(Value::Int(lhs - rhs)),
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 - rhs)),
-                Value::String(_) => Err(format!("cannot sub int with string")),
-                Value::BuiltInFn(_) => Err(format!("cannot sub int with function")),
-                Value::List(_) => todo!(),
-                Value::BuiltInMethod(_, _) => todo!(),
-                Value::Bool(_) => todo!(),
-                Value::Func(_, _) => todo!(),
-                Value::Object(_) => todo!(),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
+                other => Err(format!("cannot sub float to {}", Type::from(other))),
             },
             Value::Float(lhs) => match rhs {
-                Value::Null => Err(format!("cannot sub float with null")),
                 Value::Int(rhs) => Ok(Value::Float(lhs - *rhs as f32)),
                 Value::Float(rhs) => Ok(Value::Float(lhs - rhs)),
-                Value::String(_) => Err(format!("cannot sub float with string")),
-                Value::BuiltInFn(_) => return Err(format!("cannot nul float with function")),
-                Value::List(_) => todo!(),
-                Value::BuiltInMethod(_, _) => todo!(),
-                Value::Bool(_) => todo!(),
-                Value::Func(_, _) => todo!(),
-                Value::Object(_) => todo!(),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
+                other => Err(format!("cannot sub float to {}", Type::from(other))),
             },
-            Value::String(_) => match rhs {
-                Value::Null => Err(format!("cannot sub string with null")),
-                Value::Int(_) => Err(format!("cannot sub string with int")),
-                Value::Float(_) => Err(format!("cannot sub string with float")),
-                Value::String(_) => Err(format!("cannot sub string with string")),
-                Value::BuiltInFn(_) => return Err(format!("cannot sub string with function")),
-                Value::List(_) => todo!(),
-                Value::BuiltInMethod(_, _) => todo!(),
-                Value::Bool(_) => todo!(),
-                Value::Func(_, _) => todo!(),
-                Value::Object(_) => todo!(),
-                Value::Module(_) => todo!(),
-                Value::Tuple(_) => todo!(),
-            },
-            Value::BuiltInFn(_) => return Err(format!("cannot sub function with anything")),
-            Value::List(_) => todo!(),
-            Value::BuiltInMethod(_, _) => todo!(),
-            Value::Bool(_) => todo!(),
-            Value::Func(_, _) => todo!(),
-            Value::Object(_) => todo!(),
-            Value::Module(_) => todo!(),
-            Value::Tuple(_) => todo!(),
+            other => Err(format!(
+                "cannot sub {} to {}",
+                Type::from(other),
+                Type::from(rhs)
+            )),
         }
     }
 }
