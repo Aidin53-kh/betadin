@@ -159,7 +159,6 @@ impl Not for Value {
     }
 }
 
-
 impl Add for &Value {
     type Output = Result<Value, String>;
 
@@ -205,15 +204,15 @@ impl Mul for &Value {
             Value::Int(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::Int(lhs * rhs)),
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 * rhs)),
-                other => Err(format!("cannot mut int to {}", Type::from(other))),
+                other => Err(format!("cannot mul int to {}", Type::from(other))),
             },
             Value::Float(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::Float(lhs * *rhs as f32)),
                 Value::Float(rhs) => Ok(Value::Float(lhs * rhs)),
-                other => Err(format!("cannot mut float to {}", Type::from(other))),
+                other => Err(format!("cannot mul float to {}", Type::from(other))),
             },
             other => Err(format!(
-                "cannot mut {} to {}",
+                "cannot mul {} to {}",
                 Type::from(other),
                 Type::from(rhs)
             )),
