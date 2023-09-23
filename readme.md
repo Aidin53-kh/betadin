@@ -1,7 +1,7 @@
 # Betadin
 
 betadin is a simple programing language for research purposes, written in rust.
-<br/><br/>
+<br/>
 
 ## Features
 
@@ -14,10 +14,19 @@ betadin is a simple programing language for research purposes, written in rust.
 -   builtin modules and functions
 -   and more
 
-<br/>
+## Usage
+ 1. install betadin with cargo
+```bash
+cargo install betadin
+```
+
+2. running files with betadin cli 
+```bash
+betadin path.ak
+```
 
 ## Examples
-<br/>
+
 
 ```rust
 
@@ -115,7 +124,6 @@ fs::remove_file("path");
 
 
 # env module
-
 import std::env;
 const args = env::args(); # getting arguments
 
@@ -123,4 +131,23 @@ for arg in args {
     println(arg);
 }
 
+
+# custom module
+module custom {
+    const name = "custom";
+    module inner {
+        fn get_parent_name() {
+            return custom::inner::name;
+        }
+    }
+}
+
+println(custom::inner::get_parent_name()); # custom
+
+# or 
+import custom::inner::{get_parent_name};
+println(get_parent_name()) # custom
+
 ```
+
+more examples: https://github.com/Aidin53-kh/betadin/examples
