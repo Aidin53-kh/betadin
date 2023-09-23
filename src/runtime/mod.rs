@@ -35,8 +35,11 @@ impl ScopeStack {
         ScopeStack::new(scopes)
     }
 
-    fn declare(&mut self, name: &String, value: Value, decl_type: DeclType) -> Result<(), String> {
+    fn push(&mut self, scope: Scope) {
+        self.0.push(Arc::new(Mutex::new(scope)));
+    }
 
+    fn declare(&mut self, name: &String, value: Value, decl_type: DeclType) -> Result<(), String> {
         let mut current_scope = self
             .0
             .last()
@@ -70,6 +73,7 @@ impl ScopeStack {
         if current_scope.contains_key(name) {
             return Err(format!("'{}' already define in this scope", name));
         }
+
         current_scope.insert(name.to_string(), (value, decl_type));
 
         Ok(())

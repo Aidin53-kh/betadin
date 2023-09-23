@@ -41,7 +41,6 @@ fn main() -> Result<(), String> {
 
             // println!("{:#?}", ast);
             eval_program(&mut scopes, ast, &Prototypes::exports())?;
-            // println!("{:#?}", scopes);
             Ok(())
         }
         None => Err(format!("The file path is require")),

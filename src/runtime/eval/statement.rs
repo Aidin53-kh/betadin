@@ -48,7 +48,6 @@ pub fn eval_statement(
                     }
                 }
             }
-            // apply_imports(scopes, modules, args, items)?;
         }
         Statement::Assignment(name, rhs) => {
             let value = eval_expression(scopes, rhs, prototypes)?;
@@ -149,6 +148,30 @@ pub fn eval_statements(
 
     for statement in statements {
         let e = eval_statement(&mut inner_scopes, statement, prototypes)?;
+
+        if let Statement::Fn(_, _, _) = statement {
+            continue;
+        }
+
+        if let Escape::None = e {
+            continue;
+        }
+
+        return Ok(e);
+    }
+
+    Ok(Escape::None)
+}
+
+pub fn eval_statements_and_push_scope(
+    scopes: &mut ScopeStack,
+    statements: &Vec<Statement>,
+    prototypes: &HashMap<Type, HashMap<String, Value>>,
+) -> Result<Escape, String> {
+    scopes.push(HashMap::new());
+
+    for statement in statements {
+        let e = eval_statement(scopes, statement, prototypes)?;
 
         if let Statement::Fn(_, _, _) = statement {
             continue;

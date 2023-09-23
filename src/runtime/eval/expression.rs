@@ -1,9 +1,12 @@
 use std::collections::{BTreeMap, HashMap};
+use std::fs;
 
 use crate::ast::{BinaryOpKind, Expr, UnaryOpKind};
+use crate::grammar;
 use crate::runtime::value::{KeyValue, Type, Value};
-use crate::runtime::{DeclType, ScopeStack};
+use crate::runtime::{DeclType, Prototypes, ScopeStack};
 
+use super::program::eval_program_and_push_scope;
 use super::statement::{eval_module, eval_statements, Escape};
 
 pub fn eval_expression(
@@ -406,16 +409,35 @@ pub fn get_module(
                 Value::Module(items) => {
                     exports = items;
                 }
-                _ => return Err(format!("module {} not found", path)),
+                _ => return Err(format!("module {} not found (1)", path)),
             },
             None => match scopes.get(path) {
                 Some(value) => match value {
                     Value::Module(items) => {
                         exports = items;
                     }
-                    _ => return Err(format!("module {} not found", path)),
+                    _ => return Err(format!("module {} not found (2)", path)),
                 },
-                None => return Err(format!("module {} not found", path)),
+                None => {
+                    let mut path = String::new();
+                    path.push_str("./examples/");
+                    path.push_str(&paths.join("/"));
+                    path.push_str(".ak");
+
+                    let file_result = fs::read_to_string(path);
+
+                    if let Ok(file) = file_result {
+                        // scopes.push();
+                        let program = grammar::programParser::new().parse(&file).expect(&format!(
+                            "unable to compile module {}",
+                            paths.last().unwrap()
+                        ));
+                        eval_program_and_push_scope(scopes, program, &Prototypes::exports())?;
+                        break;
+                    } else {
+                        return Err(format!("module {} not found (3)", paths.last().unwrap()));
+                    }
+                }
             },
         }
     }
