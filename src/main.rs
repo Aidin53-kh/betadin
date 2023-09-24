@@ -15,7 +15,6 @@ lalrpop_util::lalrpop_mod!(pub grammar);
 
 mod ast;
 mod runtime;
-mod utils;
 
 fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();

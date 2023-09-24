@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::runtime::value::{Type, Value};
+use crate::runtime::value::Value;
 
 pub mod float;
 pub mod int;
@@ -9,32 +9,33 @@ pub mod null;
 pub mod object;
 pub mod string;
 pub mod tuple;
-pub struct Prototypes(HashMap<Type, HashMap<String, Value>>);
+
+pub struct Prototypes(HashMap<String, HashMap<String, Value>>);
 
 impl Prototypes {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
 
-    pub fn exports() -> HashMap<Type, HashMap<String, Value>> {
+    pub fn exports() -> HashMap<String, HashMap<String, Value>> {
         let mut proto = Prototypes::new();
 
-        proto.declare(Type::Int, int::int_proto());
-        proto.declare(Type::String, string::string_proto());
-        proto.declare(Type::List, list::list_proto());
-        proto.declare(Type::Float, float::float_proto());
-        proto.declare(Type::Null, null::null_proto());
-        proto.declare(Type::Object, object::object_proto());
-        proto.declare(Type::Tuple, tuple::tuple_proto());
+        proto.declare("int".to_string(), int::int_proto());
+        proto.declare("string".to_string(), string::string_proto());
+        proto.declare("list".to_string(), list::list_proto());
+        proto.declare("float".to_string(), float::float_proto());
+        proto.declare("null".to_string(), null::null_proto());
+        // proto.declare(ValueType::Object, object::object_proto());
+        proto.declare("tuple".to_string(), tuple::tuple_proto());
 
         return proto.items();
     }
 
-    pub fn declare(&mut self, t: Type, proto: HashMap<String, Value>) {
+    pub fn declare(&mut self, t: String, proto: HashMap<String, Value>) {
         self.0.insert(t, proto);
     }
 
-    fn items(self) -> HashMap<Type, HashMap<String, Value>> {
+    fn items(self) -> HashMap<String, HashMap<String, Value>> {
         return self.0;
     }
 }

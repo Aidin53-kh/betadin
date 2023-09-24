@@ -1,5 +1,5 @@
 use crate::ast::*;
-use crate::utils::*;
+use crate::runtime::{Type, value::BuiltinType};
 
 use std::str::FromStr;
 
@@ -12,9 +12,9 @@ pub program: Program = {
 statement: Statement = {
     <expr:expr> ";" => Statement::Expression(expr),
     <name:identifier> "=" <rhs:expr> ";" => Statement::Assignment(name, rhs),
-    "let" <name:identifier> "=" <rhs:expr> ";" => Statement::Let(name, rhs),
-    "const" <name:identifier> "=" <rhs:expr> ";" => Statement::Const(name, rhs),
-    "fn" <name:identifier> "(" <params:params> ")" <block:block> => Statement::Fn(name, params, block),
+    "let" <name:identifier> <t:optional_datatype> "=" <rhs:expr> ";" => Statement::Let(name, t, rhs),
+    "const" <name:identifier> <t:optional_datatype> "=" <rhs:expr> ";" => Statement::Const(name, t, rhs),
+    "fn" <name:identifier> "(" <args:input_args> ")" <block:block> => Statement::Fn(name, args, block),
     "return" <expr:expr> ";" => Statement::Return(expr),
     "import" <args:import_args> ";" => Statement::Import(args, None),
     "import" <args:import_args> "::" "{" <names:params> "}" ";" => Statement::Import(args, Some(names)),
@@ -29,18 +29,39 @@ statement: Statement = {
 if_statement: Statement = {
     "if" <cond:expr> <if_block:block> => Statement::If(vec![Branch::new(cond, if_block)], None),
     "if" <cond:expr> <if_block:block> "else" <else_block:block> => Statement::If(vec![Branch::new(cond, if_block)], Some(else_block)),
-    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_statement> => insert_to_branch_stmt(cond, if_block, else_if_stmts),
+    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_statement> => Branch::insert_to_branch_stmt(cond, if_block, else_if_stmts),
 }
 
 if_expr: Expr = {
     "if" <cond:expr> <if_block:block> => Expr::If(vec![Branch::new(cond, if_block)], None),
     "if" <cond:expr> <if_block:block> "else" <else_block:block> => Expr::If(vec![Branch::new(cond, if_block)], Some(else_block)),
-    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_expr> => insert_to_branch_expr(cond, if_block, else_if_stmts),
+    "if" <cond:expr> <if_block:block> "else" <else_if_stmts:if_expr> => Branch::insert_to_branch_expr(cond, if_block, else_if_stmts),
 }
 
 import_args: Vec<String> = {
     <args:import_args> "::" <name:identifier> => append(args, name),
     <name:identifier> => vec![name],
+}
+
+optional_datatype: Option<Type> = {
+    ":" <t:datatype> => Some(t),
+    () => None
+}
+
+datatype: Type = {
+    "string" => Type::Builtin(BuiltinType::String),
+    "int" => Type::Builtin(BuiltinType::Int),
+    "float" => Type::Builtin(BuiltinType::Float),
+    "bool" => Type::Builtin(BuiltinType::Bool),
+    "null" => Type::Builtin(BuiltinType::Null),
+    <datatype> "[]" => Type::Builtin(BuiltinType::List(Box::new(<>))),
+    "(" <t:datatype_list> ")" => Type::Builtin(BuiltinType::Tuple(t))
+}
+
+datatype_list: Vec<Type> = {
+    () => vec![],
+    <types:datatype_list> "," <e:datatype> => append(types, e),
+    <e:datatype> => vec![e]
 }
 
 expr: Expr = {
@@ -74,7 +95,7 @@ expr_3: Expr = {
 expr_4: Expr = {
     "!" <expr:expr_5> => Expr::UnaryOp(UnaryOpKind::Not, Box::new(expr)),   
     "typeof" <expr:expr_5> => Expr::UnaryOp(UnaryOpKind::Typeof, Box::new(expr)),
-    "fn" "(" <params:params> ")" <block:block>  => Expr::Fn(params, block),
+    "fn" "(" <args:input_args> ")" <block:block>  => Expr::Fn(args, block),
     "module" <block:block> => Expr::Module(block),
 
     if_expr,
@@ -131,6 +152,16 @@ params: Vec<String> = {
     () => vec![],
     <params:params> "," <param:identifier> => append(params, param),
     <param:identifier> => vec![param]
+}
+
+input_args: Vec<Arg> = {
+    () => vec![],
+    <arg:arg> => vec![arg],
+    <args:input_args> "," <arg:arg> => append(args, arg),
+}
+
+arg: Arg = {
+    <ident:identifier> ":" <t:datatype> => Arg { ident, datatype: t }
 }
 
 block: Block = {
@@ -210,7 +241,12 @@ match {
     "while",
     "const",
     "typeof",
-    "module"
+    "module",
+    "string",
+    "int",
+    "float",
+    "bool",
+    "[]"
 } else {
     " " => {},
     "\n" => {},

@@ -1,4 +1,5 @@
-use crate::runtime::value::{KeyValue, Type, Value};
+use crate::runtime::Type;
+use crate::runtime::value::{KeyValue, Value};
 use std::collections::HashMap;
 
 pub use super::list::_clear;
@@ -48,7 +49,7 @@ pub fn _obj_get(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "get() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -97,7 +98,7 @@ pub fn _obj_set(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "set() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -119,7 +120,7 @@ pub fn _obj_keys(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         }
         _ => Err(format!(
             "keys() dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -141,7 +142,7 @@ pub fn _obj_values(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         }
         _ => Err(format!(
             "values() dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -175,7 +176,7 @@ pub fn _obj_remove(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "get() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }

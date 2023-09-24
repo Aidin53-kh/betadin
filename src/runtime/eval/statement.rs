@@ -1,8 +1,8 @@
 use std::collections::{BTreeMap, HashMap};
 
 use crate::ast::Statement;
-use crate::runtime::value::{Type, Value};
-use crate::runtime::{DeclType, ScopeStack};
+use crate::runtime::value::Value;
+use crate::runtime::{DeclType, ScopeStack, Type};
 
 use super::expression::{eval_expression, get_module};
 
@@ -17,19 +17,19 @@ pub enum Escape {
 pub fn eval_statement(
     scopes: &mut ScopeStack,
     statement: &Statement,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
 ) -> Result<Escape, String> {
     match statement {
         Statement::Expression(expr) => {
             eval_expression(scopes, expr, prototypes)?;
         }
-        Statement::Let(name, rhs) => {
+        Statement::Let(name, datatype, rhs) => {
             let value = eval_expression(scopes, rhs, prototypes)?;
-            scopes.declare(name, value, DeclType::Mutable)?;
+            scopes.declare(name, value, datatype, DeclType::Mutable)?;
         }
-        Statement::Const(name, rhs) => {
+        Statement::Const(name, datatype, rhs) => {
             let value = eval_expression(scopes, rhs, prototypes)?;
-            scopes.declare(name, value, DeclType::Immutable)?;
+            scopes.declare(name, value, datatype, DeclType::Immutable)?;
         }
         Statement::Import(args, items) => {
             let module = get_module(scopes, args)?;
@@ -38,13 +38,23 @@ pub fn eval_statement(
                 Some(list) => {
                     for (key, value) in module {
                         if list.contains(&key) {
-                            scopes.declare(&key, value, DeclType::Immutable)?;
+                            scopes.declare(
+                                &key,
+                                value.clone(),
+                                &Some(Type::from(&value)),
+                                DeclType::Immutable,
+                            )?;
                         }
                     }
                 }
                 None => {
                     if let Some(m) = args.last() {
-                        scopes.declare(m, Value::Module(module), DeclType::Immutable)?;
+                        scopes.declare(
+                            m,
+                            Value::Module(module),
+                            &Some(Type::Custom("todo".to_string())),
+                            DeclType::Immutable,
+                        )?;
                     }
                 }
             }
@@ -81,6 +91,7 @@ pub fn eval_statement(
             scopes.declare(
                 name,
                 Value::Func(args.to_vec(), block.to_vec()),
+                &Some(Type::Custom("function".to_string())),
                 DeclType::Immutable,
             )?;
         }
@@ -92,7 +103,12 @@ pub fn eval_statement(
                     for value in values {
                         let mut inner_scopes = scopes.new_from_push(HashMap::new());
 
-                        inner_scopes.declare(lhs, value, DeclType::Mutable)?;
+                        inner_scopes.declare(
+                            lhs,
+                            value,
+                            &Some(Type::Custom("todo".to_string())),
+                            DeclType::Mutable,
+                        )?;
                         let ret = eval_statements(&mut inner_scopes, block, prototypes)?;
 
                         match ret {
@@ -132,7 +148,12 @@ pub fn eval_statement(
         Statement::Module(name, statements) => {
             let module = eval_module(scopes, prototypes, name, statements)?;
 
-            scopes.declare(name, Value::Module(module), DeclType::Immutable)?;
+            scopes.declare(
+                name,
+                Value::Module(module),
+                &Some(Type::Custom("module".to_string())),
+                DeclType::Immutable,
+            )?;
         }
     };
 
@@ -142,7 +163,7 @@ pub fn eval_statement(
 pub fn eval_statements(
     scopes: &mut ScopeStack,
     statements: &Vec<Statement>,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
 ) -> Result<Escape, String> {
     let mut inner_scopes = scopes.new_from_push(HashMap::new());
 
@@ -166,7 +187,7 @@ pub fn eval_statements(
 pub fn eval_statements_and_push_scope(
     scopes: &mut ScopeStack,
     statements: &Vec<Statement>,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
 ) -> Result<Escape, String> {
     scopes.push(HashMap::new());
 
@@ -189,7 +210,7 @@ pub fn eval_statements_and_push_scope(
 
 pub fn eval_module(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     name: &String,
     statements: &Vec<Statement>,
 ) -> Result<BTreeMap<String, Value>, String> {
@@ -198,14 +219,34 @@ pub fn eval_module(
     let mut inner_scope = scopes.new_from_push(HashMap::new());
     for statement in statements {
         match statement {
-            Statement::Const(name, expr) => {
+            Statement::Const(name, datatype, expr) => {
                 let value = eval_expression(&mut inner_scope, expr, prototypes)?;
 
+                // type checking
+                if let Some(datatype) = datatype {
+                    if &Type::from(&value) != datatype {
+                        return Err(format!(
+                            "expected {} found {}",
+                            datatype,
+                            Type::from(&value),
+                        ));
+                    }
+                }
                 exports.insert(name.to_string(), value);
             }
-            Statement::Let(name, expr) => {
+            Statement::Let(name, datatype, expr) => {
                 let value = eval_expression(&mut inner_scope, expr, prototypes)?;
 
+                // type checking
+                if let Some(datatype) = datatype {
+                    if &Type::from(&value) != datatype {
+                        return Err(format!(
+                            "expected {} found {}",
+                            datatype,
+                            Type::from(&value),
+                        ));
+                    }
+                }
                 exports.insert(name.to_string(), value);
             }
             Statement::Fn(name, args, block) => {
@@ -219,6 +260,11 @@ pub fn eval_module(
         }
     }
 
-    inner_scope.declare(name, Value::Module(exports.clone()), DeclType::Immutable)?;
+    inner_scope.declare(
+        name,
+        Value::Module(exports.clone()),
+        &Some(Type::Custom("module".to_string())),
+        DeclType::Immutable,
+    )?;
     Ok(exports)
 }

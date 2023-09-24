@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use crate::runtime::value::{Type, Value};
+use crate::runtime::value::Value;
+use crate::runtime::Type;
 
 use super::string::{_contains, _len, _to_string};
 
@@ -60,7 +61,7 @@ pub fn _at(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "at() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -82,7 +83,7 @@ pub fn _push(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         _ => {
             return Err(format!(
                 "push() dose not exist in '{:?}' prototype",
-                Type::from(&this)
+                String::from(Type::from(&this))
             ))
         }
     }
@@ -102,7 +103,7 @@ pub fn _pop(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         _ => {
             return Err(format!(
                 "pop() dose not exist in '{:?}' prototype",
-                Type::from(&this)
+                String::from(Type::from(&this))
             ))
         }
     }
@@ -117,7 +118,7 @@ pub fn _rev(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         Value::List(list) => Ok(Value::List(list.into_iter().rev().collect())),
         _ => Err(format!(
             "rev() dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -144,7 +145,7 @@ pub fn _join(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "join() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -159,7 +160,7 @@ pub fn _clear(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         Value::Object(_) => Ok(Value::Object(vec![])),
         _ => Err(format!(
             "clear() dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }

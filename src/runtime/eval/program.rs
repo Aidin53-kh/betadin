@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
+use crate::ast::Program;
 use crate::runtime::value::Value;
 use crate::runtime::ScopeStack;
-use crate::{ast::Program, runtime::value::Type};
 
 use super::statement::{eval_statements, eval_statements_and_push_scope, Escape};
 
 pub fn eval_program(
     scopes: &mut ScopeStack,
     program: Program,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
 ) -> Result<Escape, String> {
     let e = eval_statements(scopes, &program.statements, prototypes)?;
 
@@ -31,7 +31,7 @@ pub fn eval_program(
 pub fn eval_program_and_push_scope(
     scopes: &mut ScopeStack,
     program: Program,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
 ) -> Result<Escape, String> {
     let e = eval_statements_and_push_scope(scopes, &program.statements, prototypes)?;
 

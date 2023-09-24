@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use crate::runtime::value::{value_list, Type, Value};
+use crate::runtime::{value::{value_list, Value}, Type};
 
 use super::list::_at;
 
@@ -52,7 +52,7 @@ pub fn _len(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         Value::List(l) => Ok(Value::Int(l.len() as i32)),
         _ => Err(format!(
             "len dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -73,7 +73,7 @@ pub fn _to_string(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         }
         _ => Err(format!(
             "to_string dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -93,7 +93,7 @@ pub fn _chars(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         }
         _ => Err(format!(
             "to_string dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -114,7 +114,7 @@ pub fn _to_numeric(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         }
         _ => Err(format!(
             "to_string dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -134,7 +134,7 @@ pub fn _lines(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         }
         _ => Err(format!(
             "to_string dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -161,7 +161,7 @@ pub fn _split(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "split() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -175,7 +175,7 @@ pub fn _upper(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         Value::String(s) => Ok(Value::String(s.to_uppercase())),
         _ => Err(format!(
             "upper() dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -189,7 +189,7 @@ pub fn _lower(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         Value::String(s) => Ok(Value::String(s.to_lowercase())),
         _ => Err(format!(
             "lower() dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -203,7 +203,7 @@ pub fn _trim(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         Value::String(s) => Ok(Value::String(s.trim().to_string())),
         _ => Err(format!(
             "trim() dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -242,7 +242,7 @@ pub fn _contains(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "contains() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -256,7 +256,7 @@ pub fn _is_ascii(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         Value::String(s) => Ok(Value::Bool(s.is_ascii())),
         _ => Err(format!(
             "len dose not exist in {:?} prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -276,7 +276,7 @@ pub fn _repeat(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "split() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -302,7 +302,7 @@ pub fn _replace(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "split() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }
@@ -326,7 +326,7 @@ pub fn _push(vs: Vec<Value>, this: Value) -> Result<Value, String> {
         },
         _ => Err(format!(
             "split() dose not exist in '{:?}' prototype",
-            Type::from(&this)
+            String::from(Type::from(&this))
         )),
     }
 }

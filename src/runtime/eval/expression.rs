@@ -1,10 +1,10 @@
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 
-use crate::ast::{BinaryOpKind, Branch, Expr, Prop, Statement, UnaryOpKind};
+use crate::ast::{Arg, BinaryOpKind, Branch, Expr, Prop, Statement, UnaryOpKind};
 use crate::grammar;
-use crate::runtime::value::{KeyValue, Type, Value};
-use crate::runtime::{DeclType, Prototypes, ScopeStack};
+use crate::runtime::value::{KeyValue, Value};
+use crate::runtime::{DeclType, Prototypes, ScopeStack, Simple, Type};
 
 use super::program::eval_program_and_push_scope;
 use super::statement::{eval_module, eval_statements, Escape};
@@ -12,7 +12,7 @@ use super::statement::{eval_module, eval_statements, Escape};
 pub fn eval_expression(
     scopes: &mut ScopeStack,
     expression: &Expr,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
 ) -> Result<Value, String> {
     match expression {
         Expr::Null => eval_null_expr(),
@@ -59,7 +59,7 @@ pub fn eval_bool_expr(b: &bool) -> Result<Value, String> {
 
 pub fn eval_list_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     list: &Vec<Expr>,
 ) -> Result<Value, String> {
     let mut values: Vec<Value> = Vec::new();
@@ -75,7 +75,7 @@ pub fn eval_list_expr(
 
 pub fn eval_call_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     expr: &Box<Expr>,
     args: &Vec<Expr>,
 ) -> Result<Value, String> {
@@ -101,6 +101,8 @@ pub fn eval_call_expr(
                     args.len()
                 ));
             }
+            // x: int
+            // 3: int
 
             let mut inner_scope = scopes.new_from_push(HashMap::new());
             for (i, param) in params.iter().enumerate() {
@@ -108,7 +110,12 @@ pub fn eval_call_expr(
                     Some(expr) => {
                         let value = eval_expression(&mut inner_scope, expr, &prototypes)?;
 
-                        inner_scope.declare(param, value, DeclType::Mutable)?;
+                        inner_scope.declare(
+                            &param.ident,
+                            value,
+                            &Some(param.datatype.clone()),
+                            DeclType::Mutable,
+                        )?;
                     }
                     None => {
                         return Err(format!(
@@ -145,7 +152,7 @@ pub fn eval_call_expr(
         _ => {
             return Err(format!(
                 "value of type '{:?}' is not callable (5)",
-                Type::from(&value)
+                String::from(Type::from(&value))
             ));
         }
     }
@@ -160,14 +167,14 @@ pub fn eval_ident_expr(scopes: &mut ScopeStack, name: &String) -> Result<Value, 
 
 pub fn eval_method_call_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     object: &Box<Expr>,
     calle: &Box<Expr>,
 ) -> Result<Value, String> {
     let obj_value = eval_expression(scopes, &*object, &prototypes)?;
 
     match *calle.clone() {
-        Expr::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
+        Expr::Identifier(name) => match prototypes.get(&Type::simple(obj_value.clone())) {
             Some(proto) => match proto.get(&name) {
                 Some(value) => {
                     if let Value::BuiltInMethod(f, _) = value {
@@ -186,19 +193,19 @@ pub fn eval_method_call_expr(
                     return Err(format!(
                         "'{}' dose not exist in '{:?}' prototype (6)",
                         name,
-                        Type::from(&obj_value)
+                        String::from(Type::from(&obj_value))
                     ));
                 }
             },
             None => {
                 return Err(format!(
                     "the prototype for type {:?} is not implemented (8)",
-                    Type::from(&obj_value)
+                    String::from(Type::from(&obj_value))
                 ));
             }
         },
         Expr::Call(expr, args) => match *expr {
-            Expr::Identifier(name) => match prototypes.get(&Type::from(&obj_value)) {
+            Expr::Identifier(name) => match prototypes.get(&Type::simple(obj_value.clone())) {
                 Some(proto) => match proto.get(&name) {
                     Some(value) => match value {
                         Value::BuiltInMethod(f, _) => {
@@ -224,21 +231,21 @@ pub fn eval_method_call_expr(
                         return Err(format!(
                             "'{}' dose not exist in '{:?}' prototype (3)",
                             name,
-                            Type::from(&obj_value)
+                            String::from(Type::from(&obj_value))
                         ));
                     }
                 },
                 None => {
                     return Err(format!(
                         "the prototype for type {:?} is not implemented",
-                        Type::from(&obj_value)
+                        String::from(Type::from(&obj_value))
                     ))
                 }
             },
             _ => {
                 return Err(format!(
                     "value of type {:?} not callable (2)",
-                    Type::from(&obj_value)
+                    String::from(Type::from(&obj_value))
                 ));
             }
         },
@@ -246,14 +253,14 @@ pub fn eval_method_call_expr(
             return Err(format!(
                 "{} is not found in {} prototype",
                 n,
-                Type::from(&obj_value)
+                String::from(Type::from(&obj_value))
             ))
         }
 
         _ => {
             return Err(format!(
                 "value of type {:?} not callable (1)",
-                Type::from(&obj_value)
+                String::from(Type::from(&obj_value))
             ));
         }
     }
@@ -261,7 +268,7 @@ pub fn eval_method_call_expr(
 
 pub fn eval_index_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     expr: &Box<Expr>,
     loc: &Box<Expr>,
 ) -> Result<Value, String> {
@@ -282,8 +289,8 @@ pub fn eval_index_expr(
                 _ => {
                     return Err(format!(
                         "the type {:?} cannot be indexed by {:?}",
-                        Type::from(&expr_value),
-                        Type::from(&loc_value)
+                        String::from(Type::from(&expr_value)),
+                        String::from(Type::from(&loc_value))
                     ))
                 }
             }
@@ -302,8 +309,8 @@ pub fn eval_index_expr(
                 _ => {
                     return Err(format!(
                         "the type {:?} cannot be indexed by {:?}",
-                        Type::from(&expr_value),
-                        Type::from(&loc_value)
+                        String::from(Type::from(&expr_value)),
+                        String::from(Type::from(&loc_value))
                     ))
                 }
             }
@@ -311,7 +318,7 @@ pub fn eval_index_expr(
         _ => {
             return Err(format!(
                 "cannot index into a value of type {:?}",
-                Type::from(&expr_value)
+                String::from(Type::from(&expr_value)),
             ));
         }
     }
@@ -319,7 +326,7 @@ pub fn eval_index_expr(
 
 pub fn eval_binary_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     lhs: &Box<Expr>,
     op: &BinaryOpKind,
     rhs: &Box<Expr>,
@@ -343,10 +350,16 @@ pub fn eval_binary_expr(
                 if let Value::Bool(v2) = rhs {
                     return Ok(Value::Bool(v1 && v2));
                 } else {
-                    return Err(format!("expected bool found {:?}", Type::from(&rhs)));
+                    return Err(format!(
+                        "expected bool found {:?}",
+                        String::from(Type::from(&rhs))
+                    ));
                 }
             } else {
-                return Err(format!("expected bool found {:?}", Type::from(&lhs)));
+                return Err(format!(
+                    "expected bool found {:?}",
+                    String::from(Type::from(&lhs))
+                ));
             }
         }
         BinaryOpKind::Or => {
@@ -354,10 +367,16 @@ pub fn eval_binary_expr(
                 if let Value::Bool(v2) = rhs {
                     return Ok(Value::Bool(v1 || v2));
                 } else {
-                    return Err(format!("expected bool found {:?}", Type::from(&rhs)));
+                    return Err(format!(
+                        "expected bool found {:?}",
+                        String::from(Type::from(&rhs))
+                    ));
                 }
             } else {
-                return Err(format!("expected bool found {:?}", Type::from(&lhs)));
+                return Err(format!(
+                    "expected bool found {:?}",
+                    String::from(Type::from(&lhs))
+                ));
             }
         }
     };
@@ -367,7 +386,7 @@ pub fn eval_binary_expr(
 
 pub fn eval_unary_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     op: &UnaryOpKind,
     expr: &Box<Expr>,
 ) -> Result<Value, String> {
@@ -375,13 +394,13 @@ pub fn eval_unary_expr(
 
     match op {
         UnaryOpKind::Not => !value,
-        UnaryOpKind::Typeof => Ok(Value::String(Type::from(&value).to_string())),
+        UnaryOpKind::Typeof => Ok(Value::String(String::from(Type::from(&value)))),
     }
 }
 
 pub fn eval_object_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     props: &Vec<Prop>,
 ) -> Result<Value, String> {
     let mut values: Vec<KeyValue> = Vec::new();
@@ -398,13 +417,13 @@ pub fn eval_object_expr(
     Ok(Value::Object(values))
 }
 
-pub fn eval_fn_expr(args: &Vec<String>, block: &Vec<Statement>) -> Result<Value, String> {
+pub fn eval_fn_expr(args: &Vec<Arg>, block: &Vec<Statement>) -> Result<Value, String> {
     Ok(Value::Func(args.to_vec(), block.to_vec()))
 }
 
 pub fn eval_module_call_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     paths: &Vec<String>,
     expr: &Box<Expr>,
 ) -> Result<Value, String> {
@@ -413,7 +432,12 @@ pub fn eval_module_call_expr(
     let mut inner_scopes = scopes.new_from_push(HashMap::new());
 
     for (key, value) in module {
-        inner_scopes.declare(&key, value, DeclType::Immutable)?;
+        inner_scopes.declare(
+            &key,
+            value.clone(),
+            &Some(Type::from(&value)),
+            DeclType::Immutable,
+        )?;
     }
 
     let value = eval_expression(&mut inner_scopes, &*expr, &prototypes)?;
@@ -422,7 +446,7 @@ pub fn eval_module_call_expr(
 
 pub fn eval_module_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     statements: &Vec<Statement>,
 ) -> Result<Value, String> {
     let module = eval_module(scopes, prototypes, &String::from("test"), statements)?;
@@ -431,7 +455,7 @@ pub fn eval_module_expr(
 
 pub fn eval_if_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     branchs: &Vec<Branch>,
     else_block: &Option<Vec<Statement>>,
 ) -> Result<Value, String> {
@@ -467,7 +491,7 @@ pub fn eval_if_expr(
 
 pub fn eval_tuple_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     exprs: &Vec<Expr>,
 ) -> Result<Value, String> {
     let mut values = Vec::new();
@@ -482,7 +506,7 @@ pub fn eval_tuple_expr(
 
 pub fn eval_range_expr(
     scopes: &mut ScopeStack,
-    prototypes: &HashMap<Type, HashMap<String, Value>>,
+    prototypes: &HashMap<String, HashMap<String, Value>>,
     start: &Box<Expr>,
     end: &Box<Expr>,
 ) -> Result<Value, String> {
@@ -500,9 +524,19 @@ pub fn eval_range_expr(
 
                 return Ok(Value::List(list));
             }
-            other => return Err(format!("extected integer, found {}", Type::from(&other))),
+            other => {
+                return Err(format!(
+                    "extected integer, found {}",
+                    String::from(Type::from(&other))
+                ))
+            }
         },
-        other => return Err(format!("expected integer, found {}", Type::from(&other))),
+        other => {
+            return Err(format!(
+                "expected integer, found {}",
+                String::from(Type::from(&other))
+            ))
+        }
     }
 }
 

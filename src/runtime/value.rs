@@ -2,7 +2,9 @@ use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::ops::{Add, Div, Mul, Not, Sub};
 
-use crate::ast::Block;
+use crate::ast::{Arg, Block};
+
+use super::Type;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
@@ -18,7 +20,7 @@ pub enum Value {
         fn(Vec<Value>, Value) -> Result<Value, String>,
         Option<Box<Value>>,
     ),
-    Func(Vec<String>, Block),
+    Func(Vec<Arg>, Block),
     Module(BTreeMap<String, Value>),
     Tuple(Vec<Value>),
 }
@@ -29,18 +31,20 @@ pub struct KeyValue {
     pub value: Value,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum Type {
-    Null,
-    Int,
-    Float,
-    String,
-    List,
-    Func,
-    Bool,
-    Object,
-    Module,
-    Tuple,
+pub fn check_list_items(list: &Vec<Value>) -> Result<(), String> {
+    if let Some(value) = list.get(0) {
+        for item in list {
+            if Type::from(item) != Type::from(value) {
+                return Err(format!(
+                    "expected {}, found {}. help: all list items most have same datatype",
+                    Type::from(value),
+                    Type::from(item)
+                ));
+            }
+        }
+    }
+
+    Ok(())
 }
 
 pub fn value_list(values: Vec<Value>) -> String {
@@ -71,40 +75,15 @@ pub fn key_value(obj: Vec<KeyValue>) -> String {
     res
 }
 
-impl From<&Value> for Type {
-    fn from(value: &Value) -> Self {
-        match value {
-            Value::Null => Type::Null,
-            Value::Int(_) => Type::Int,
-            Value::Float(_) => Type::Float,
-            Value::String(_) => Type::String,
-            Value::Bool(_) => Type::Bool,
-            Value::List(_) => Type::List,
-            Value::BuiltInFn(_) => Type::Func,
-            Value::BuiltInMethod(_, _) => Type::Func,
-            Value::Func(_, _) => Type::Func,
-            Value::Object(_) => Type::Object,
-            Value::Module(_) => Type::Module,
-            Value::Tuple(_) => Type::Tuple,
-        }
-    }
-}
-
-impl Display for Type {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Type::Null => write!(f, "null"),
-            Type::Int => write!(f, "int"),
-            Type::Float => write!(f, "float"),
-            Type::String => write!(f, "string"),
-            Type::List => write!(f, "list"),
-            Type::Func => write!(f, "function"),
-            Type::Bool => write!(f, "bool"),
-            Type::Object => write!(f, "object"),
-            Type::Module => write!(f, "module"),
-            Type::Tuple => write!(f, "tuple"),
-        }
-    }
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Hash)]
+pub enum BuiltinType {
+    Null,
+    Int,
+    Float,
+    Bool,
+    String,
+    List(Box<Type>),
+    Tuple(Vec<Type>),
 }
 
 impl From<&Value> for Value {
@@ -141,6 +120,35 @@ impl Display for Value {
             Value::Object(obj) => write!(f, "{{\n{}}}", key_value(obj.to_vec())),
             Value::Module(_) => write!(f, "module"),
             Value::Tuple(t) => write!(f, "({})", value_list(t.to_vec())),
+        }
+    }
+}
+
+impl Display for BuiltinType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BuiltinType::Null => write!(f, "null"),
+            BuiltinType::Int => write!(f, "int"),
+            BuiltinType::Float => write!(f, "float"),
+            BuiltinType::Bool => write!(f, "bool"),
+            BuiltinType::String => write!(f, "string"),
+            BuiltinType::List(t) => {
+                let datatype = *t.clone();
+
+                return write!(f, "{}[]", datatype.to_string());
+            }
+            BuiltinType::Tuple(types) => {
+                let mut res = String::new();
+
+                for (i, t) in types.iter().enumerate() {
+                    if i >= 1 {
+                        res.push_str(", ");
+                    }
+                    res.push_str(&String::from(t.clone()));
+                }
+
+                return write!(f, "({})", res);
+            }
         }
     }
 }

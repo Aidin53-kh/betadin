@@ -2,37 +2,53 @@ use ::std::collections::HashMap;
 
 use self::std::Std;
 
-use super::{value::Value, DeclType};
+use super::{value::Value, DeclType, Type};
 
 pub mod std;
 
-pub struct StdLib(HashMap<String, (Value, DeclType)>);
+pub struct StdLib(HashMap<String, (Value, DeclType, Type)>);
 
 impl StdLib {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
 
-    pub fn exports() -> HashMap<String, (Value, DeclType)> {
+    pub fn exports() -> HashMap<String, (Value, DeclType, Type)> {
         let mut lib = StdLib::new();
 
         // builtin modules
-        lib.declare("std", Value::Module(Std::exports()));
+        lib.declare(
+            "std",
+            Value::Module(Std::exports()),
+            Type::Custom("module".to_string()),
+        );
 
         // builtin functions
-        lib.declare("print", Value::BuiltInFn(ak_lib::print));
-        lib.declare("println", Value::BuiltInFn(ak_lib::println));
-        lib.declare("panic", Value::BuiltInFn(ak_lib::panic));
+        lib.declare(
+            "print",
+            Value::BuiltInFn(ak_lib::print),
+            Type::Custom("function".to_string()),
+        );
+        lib.declare(
+            "println",
+            Value::BuiltInFn(ak_lib::println),
+            Type::Custom("function".to_string()),
+        );
+        lib.declare(
+            "panic",
+            Value::BuiltInFn(ak_lib::panic),
+            Type::Custom("function".to_string()),
+        );
 
         return lib.items();
     }
 
-    pub fn declare(&mut self, name: &str, value: Value) {
+    pub fn declare(&mut self, name: &str, value: Value, datatype: Type) {
         self.0
-            .insert(String::from(name), (value, DeclType::Immutable));
+            .insert(String::from(name), (value, DeclType::Immutable, datatype));
     }
 
-    fn items(self) -> HashMap<String, (Value, DeclType)> {
+    fn items(self) -> HashMap<String, (Value, DeclType, Type)> {
         return self.0;
     }
 }

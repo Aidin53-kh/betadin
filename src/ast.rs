@@ -1,3 +1,5 @@
+use crate::runtime::Type;
+
 #[derive(Debug, Clone)]
 pub struct Program {
     pub statements: Vec<Statement>,
@@ -11,14 +13,14 @@ impl Program {
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Statement {
-    Let(String, Expr),
-    Const(String, Expr),
+    Let(String, Option<Type>, Expr),
+    Const(String, Option<Type>, Expr),
     Expression(Expr),
     Assignment(String, Expr),
     Import(Vec<String>, Option<Vec<String>>),
     If(Vec<Branch>, Option<Block>),
     Return(Expr),
-    Fn(String, Vec<String>, Block),
+    Fn(String, Vec<Arg>, Block),
     Module(String, Block),
     For(String, Expr, Block),
     While(Expr, Block),
@@ -42,7 +44,7 @@ pub enum Expr {
     Index(Box<Expr>, Box<Expr>),
     BinaryOp(Box<Expr>, BinaryOpKind, Box<Expr>),
     UnaryOp(UnaryOpKind, Box<Expr>),
-    Fn(Vec<String>, Block),
+    Fn(Vec<Arg>, Block),
     Module(Block),
     If(Vec<Branch>, Option<Block>),
     Tuple(Vec<Expr>),
@@ -53,6 +55,12 @@ pub enum Expr {
 pub struct Prop {
     pub key: String,
     pub value: Expr,
+}
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub struct Arg {
+    pub ident: String,
+    pub datatype: Type,
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -68,6 +76,37 @@ impl Branch {
             statements,
         }
     }
+
+    pub fn insert_to_branch_stmt(
+        cond: Expr,
+        if_block: Vec<Statement>,
+        else_if_block: Statement,
+    ) -> Statement {
+        if let Statement::If(mut branches, else_stmt) = else_if_block {
+            branches.insert(0, Branch::new(cond, if_block));
+            return Statement::If(branches, else_stmt);
+        } else {
+            panic!("grammar error: if statement");
+        }
+    }
+
+    pub fn insert_to_branch_expr(
+        cond: Expr,
+        if_block: Vec<Statement>,
+        else_if_block: Expr,
+    ) -> Expr {
+        if let Expr::If(mut branches, else_stmt) = else_if_block {
+            branches.insert(0, Branch::new(cond, if_block));
+            return Expr::If(branches, else_stmt);
+        } else {
+            panic!("grammar error: if statement");
+        }
+    }
+}
+
+pub fn append<T>(mut accum: Vec<T>, item: T) -> Vec<T> {
+    accum.push(item);
+    accum
 }
 
 pub type Block = Vec<Statement>;
