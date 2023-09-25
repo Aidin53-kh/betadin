@@ -174,7 +174,7 @@ pub fn eval_method_call_expr(
     let obj_value = eval_expression(scopes, &*object, &prototypes)?;
 
     match *calle.clone() {
-        Expr::Identifier(name) => match prototypes.get(&Type::simple(obj_value.clone())) {
+        Expr::Identifier(name) => match prototypes.get(&Type::simple(&obj_value.clone())) {
             Some(proto) => match proto.get(&name) {
                 Some(value) => {
                     if let Value::BuiltInMethod(f, _) = value {
@@ -205,7 +205,7 @@ pub fn eval_method_call_expr(
             }
         },
         Expr::Call(expr, args) => match *expr {
-            Expr::Identifier(name) => match prototypes.get(&Type::simple(obj_value.clone())) {
+            Expr::Identifier(name) => match prototypes.get(&Type::simple(&obj_value.clone())) {
                 Some(proto) => match proto.get(&name) {
                     Some(value) => match value {
                         Value::BuiltInMethod(f, _) => {

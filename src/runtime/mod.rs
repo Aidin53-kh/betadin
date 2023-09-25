@@ -25,7 +25,7 @@ pub enum DeclType {
 }
 
 pub trait Simple {
-    fn simple(value: Value) -> String;
+    fn simple(value: &Value) -> String;
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Hash)]
@@ -35,7 +35,7 @@ pub enum Type {
 }
 
 impl Simple for Type {
-    fn simple(value: Value) -> String {
+    fn simple(value: &Value) -> String {
         match value {
             Value::Null => "null".to_string(),
             Value::Int(_) => "int".to_string(),

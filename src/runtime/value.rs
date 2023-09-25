@@ -4,7 +4,7 @@ use std::ops::{Add, Div, Mul, Not, Sub};
 
 use crate::ast::{Arg, Block};
 
-use super::Type;
+use super::{Simple, Type};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
@@ -37,8 +37,8 @@ pub fn check_list_items(list: &Vec<Value>) -> Result<(), String> {
             if Type::from(item) != Type::from(value) {
                 return Err(format!(
                     "expected {}, found {}. help: all list items most have same datatype",
-                    Type::from(value),
-                    Type::from(item)
+                    Type::simple(value),
+                    Type::simple(item)
                 ));
             }
         }
@@ -161,7 +161,7 @@ impl Not for Value {
             Value::Bool(b) => Ok(Value::Bool(!b)),
             _ => Err(format!(
                 "cannot apply unary operator '!' to type {}",
-                Type::from(&self)
+                Type::simple(&self)
             )),
         }
     }
@@ -176,13 +176,13 @@ impl Add for &Value {
                 Value::Int(rhs) => Ok(Value::Int(lhs + rhs)),
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 + rhs)),
                 Value::String(rhs) => Ok(Value::String(lhs.to_string() + &rhs)),
-                other => Err(format!("cannot add int to {}", Type::from(other))),
+                other => Err(format!("cannot add int to {}", Type::simple(other))),
             },
             Value::Float(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::Float(lhs + *rhs as f32)),
                 Value::Float(rhs) => Ok(Value::Float(lhs + rhs)),
                 Value::String(rhs) => Ok(Value::String(lhs.to_string() + &rhs)),
-                other => Err(format!("cannot add float to {}", Type::from(other))),
+                other => Err(format!("cannot add float to {}", Type::simple(other))),
             },
             Value::String(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::String(lhs.to_owned() + &rhs.to_string().to_owned())),
@@ -193,12 +193,12 @@ impl Add for &Value {
                 Value::List(rhs) => Ok(Value::String(
                     lhs.to_owned() + Value::List(rhs.to_owned()).to_string().as_str(),
                 )),
-                other => Err(format!("cannot add stirng to {}", Type::from(other))),
+                other => Err(format!("cannot add stirng to {}", Type::simple(other))),
             },
             other => Err(format!(
                 "cannot add {} to {}",
-                Type::from(other),
-                Type::from(rhs)
+                Type::simple(other),
+                Type::simple(rhs)
             )),
         }
     }
@@ -212,17 +212,17 @@ impl Mul for &Value {
             Value::Int(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::Int(lhs * rhs)),
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 * rhs)),
-                other => Err(format!("cannot mul int to {}", Type::from(other))),
+                other => Err(format!("cannot mul int to {}", Type::simple(other))),
             },
             Value::Float(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::Float(lhs * *rhs as f32)),
                 Value::Float(rhs) => Ok(Value::Float(lhs * rhs)),
-                other => Err(format!("cannot mul float to {}", Type::from(other))),
+                other => Err(format!("cannot mul float to {}", Type::simple(other))),
             },
             other => Err(format!(
                 "cannot mul {} to {}",
-                Type::from(other),
-                Type::from(rhs)
+                Type::simple(other),
+                Type::simple(rhs)
             )),
         }
     }
@@ -236,17 +236,17 @@ impl Div for &Value {
             Value::Int(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::Int(lhs / rhs)),
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 / rhs)),
-                other => Err(format!("cannot div int to {}", Type::from(other))),
+                other => Err(format!("cannot div int to {}", Type::simple(other))),
             },
             Value::Float(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::Float(lhs / *rhs as f32)),
                 Value::Float(rhs) => Ok(Value::Float(lhs / rhs)),
-                other => Err(format!("cannot div float to {}", Type::from(other))),
+                other => Err(format!("cannot div float to {}", Type::simple(other))),
             },
             other => Err(format!(
                 "cannot div {} to {}",
-                Type::from(other),
-                Type::from(rhs)
+                Type::simple(other),
+                Type::simple(rhs)
             )),
         }
     }
@@ -260,17 +260,17 @@ impl Sub for &Value {
             Value::Int(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::Int(lhs - rhs)),
                 Value::Float(rhs) => Ok(Value::Float(*lhs as f32 - rhs)),
-                other => Err(format!("cannot sub float to {}", Type::from(other))),
+                other => Err(format!("cannot sub float to {}", Type::simple(other))),
             },
             Value::Float(lhs) => match rhs {
                 Value::Int(rhs) => Ok(Value::Float(lhs - *rhs as f32)),
                 Value::Float(rhs) => Ok(Value::Float(lhs - rhs)),
-                other => Err(format!("cannot sub float to {}", Type::from(other))),
+                other => Err(format!("cannot sub float to {}", Type::simple(other))),
             },
             other => Err(format!(
                 "cannot sub {} to {}",
-                Type::from(other),
-                Type::from(rhs)
+                Type::simple(other),
+                Type::simple(rhs)
             )),
         }
     }
