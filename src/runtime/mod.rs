@@ -47,7 +47,7 @@ impl Simple for Type {
             Value::Object(_) => "object".to_string(),
             Value::BuiltInFn(_) => "function".to_string(),
             Value::BuiltInMethod(_, _) => "function".to_string(),
-            Value::Func(_, _) => "function".to_string(),
+            Value::Func(..) => "function".to_string(),
             Value::Module(_) => "module".to_string(),
             Value::Tuple(_) => "tuple".to_string(),
         }
@@ -65,6 +65,11 @@ impl From<String> for Type {
             "list" => Type::Builtin(BuiltinType::List(Box::new(Type::Builtin(
                 BuiltinType::Null,
             )))),
+            "tuple" => Type::Builtin(BuiltinType::Tuple(vec![])),
+            "function" => Type::Builtin(BuiltinType::Fn(
+                vec![],
+                Box::new(Type::Builtin(BuiltinType::Null)),
+            )),
             other => Type::Custom(other.to_string()),
         }
     }
@@ -93,7 +98,7 @@ impl From<&Value> for Type {
 
                 Type::Builtin(BuiltinType::Tuple(types))
             }
-            Value::Func(args, block) => {
+            Value::Func(args, ret_type, block) => {
                 let mut scopes = ScopeStack::new(vec![Arc::new(Mutex::new(StdLib::exports()))]);
                 let mut args_types = Vec::new();
 
@@ -109,21 +114,25 @@ impl From<&Value> for Type {
                         .unwrap();
                 }
 
-                let ret = eval_statements(&mut scopes, block, &Prototypes::exports()).unwrap();
+                if let Some(ret_type) = ret_type {
+                    return Type::Builtin(BuiltinType::Fn(args_types, Box::new(ret_type.clone())));
+                } else {
+                    let ret = eval_statements(&mut scopes, block, &Prototypes::exports()).unwrap();
 
-                match ret {
-                    Escape::Return(value) => {
-                        return Type::Builtin(BuiltinType::Fn(
-                            args_types,
-                            Box::new(Type::from(&value)),
-                        ))
-                    }
+                    match ret {
+                        Escape::Return(value) => {
+                            return Type::Builtin(BuiltinType::Fn(
+                                args_types,
+                                Box::new(Type::from(&value)),
+                            ))
+                        }
 
-                    _ => {
-                        return Type::Builtin(BuiltinType::Fn(
-                            args_types,
-                            Box::new(Type::Builtin(BuiltinType::Null)),
-                        ))
+                        _ => {
+                            return Type::Builtin(BuiltinType::Fn(
+                                args_types,
+                                Box::new(Type::Builtin(BuiltinType::Null)),
+                            ))
+                        }
                     }
                 }
             }

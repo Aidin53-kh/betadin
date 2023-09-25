@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use crate::runtime::{value::{value_list, Value}, Type};
+use crate::runtime::{
+    value::{value_list, Value},
+    Type,
+};
 
 use super::list::_at;
 

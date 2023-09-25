@@ -1,5 +1,5 @@
-use crate::runtime::Type;
 use crate::runtime::value::{KeyValue, Value};
+use crate::runtime::Type;
 use std::collections::HashMap;
 
 pub use super::list::_clear;

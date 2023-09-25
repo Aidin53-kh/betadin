@@ -14,7 +14,7 @@ statement: Statement = {
     <name:identifier> "=" <rhs:expr> ";" => Statement::Assignment(name, rhs),
     "let" <name:identifier> <t:optional_datatype> "=" <rhs:expr> ";" => Statement::Let(name, t, rhs),
     "const" <name:identifier> <t:optional_datatype> "=" <rhs:expr> ";" => Statement::Const(name, t, rhs),
-    "fn" <name:identifier> "(" <args:input_args> ")" <block:block> => Statement::Fn(name, args, block),
+    "fn" <name:identifier> "(" <args:input_args> ")" <ret_type:optional_return_type> <block:block> => Statement::Fn(name, args, ret_type, block),
     "return" <expr:expr> ";" => Statement::Return(expr),
     "import" <args:import_args> ";" => Statement::Import(args, None),
     "import" <args:import_args> "::" "{" <names:params> "}" ";" => Statement::Import(args, Some(names)),
@@ -45,6 +45,11 @@ import_args: Vec<String> = {
 
 optional_datatype: Option<Type> = {
     ":" <t:datatype> => Some(t),
+    () => None
+}
+
+optional_return_type: Option<Type> = {
+    "->" <t:datatype> => Some(t),
     () => None
 }
 
@@ -108,7 +113,7 @@ expr_3: Expr = {
 expr_4: Expr = {
     "!" <expr:expr_5> => Expr::UnaryOp(UnaryOpKind::Not, Box::new(expr)),   
     "typeof" <expr:expr_5> => Expr::UnaryOp(UnaryOpKind::Typeof, Box::new(expr)),
-    "fn" "(" <args:input_args> ")" <block:block>  => Expr::Fn(args, block),
+    "fn" "(" <args:input_args> ")" <ret_type:optional_return_type> <block:block>  => Expr::Fn(args, ret_type, block),
     "module" <block:block> => Expr::Module(block),
 
     if_expr,

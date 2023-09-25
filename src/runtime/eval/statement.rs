@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use crate::ast::Statement;
-use crate::runtime::value::Value;
+use crate::runtime::value::{BuiltinType, Value};
 use crate::runtime::{DeclType, ScopeStack, Type};
 
 use super::expression::{eval_expression, get_module};
@@ -87,13 +87,48 @@ pub fn eval_statement(
             let value = eval_expression(scopes, expr, prototypes)?;
             return Ok(Escape::Return(value));
         }
-        Statement::Fn(name, args, block) => {
-            scopes.declare(
-                name,
-                Value::Func(args.to_vec(), block.to_vec()),
-                &Some(Type::Custom("function".to_string())),
-                DeclType::Immutable,
-            )?;
+        Statement::Fn(name, args, ret_type, block) => {
+            let mut inner_scopes = scopes.new_from_push(HashMap::new());
+
+            for arg in args {
+                inner_scopes
+                    .declare(
+                        &arg.ident,
+                        Value::from(arg.datatype.clone()),
+                        &Some(arg.datatype.clone()),
+                        DeclType::Mutable,
+                    )
+                    .unwrap();
+            }
+
+            let ret = eval_statements(&mut inner_scopes, block, prototypes)?;
+
+            match ret {
+                Escape::Return(val) => {
+                    scopes.declare(
+                        name,
+                        Value::Func(args.to_vec(), Some(Type::from(&val)), block.to_vec()),
+                        &Some(Type::from(&Value::Func(
+                            args.clone(),
+                            ret_type.clone(),
+                            block.clone(),
+                        ))),
+                        DeclType::Immutable,
+                    )?;
+                }
+                _ => {
+                    scopes.declare(
+                        name,
+                        Value::Func(args.to_vec(), ret_type.clone(), block.to_vec()),
+                        &Some(Type::from(&Value::Func(
+                            args.clone(),
+                            Some(Type::Builtin(BuiltinType::Null)),
+                            block.clone(),
+                        ))),
+                        DeclType::Immutable,
+                    )?;
+                }
+            }
         }
         Statement::For(lhs, iter, block) => {
             let iter_val = eval_expression(scopes, iter, prototypes)?;
@@ -170,7 +205,7 @@ pub fn eval_statements(
     for statement in statements {
         let e = eval_statement(&mut inner_scopes, statement, prototypes)?;
 
-        if let Statement::Fn(_, _, _) = statement {
+        if let Statement::Fn(..) = statement {
             continue;
         }
 
@@ -194,7 +229,7 @@ pub fn eval_statements_and_push_scope(
     for statement in statements {
         let e = eval_statement(scopes, statement, prototypes)?;
 
-        if let Statement::Fn(_, _, _) = statement {
+        if let Statement::Fn(..) = statement {
             continue;
         }
 
@@ -249,8 +284,11 @@ pub fn eval_module(
                 }
                 exports.insert(name.to_string(), value);
             }
-            Statement::Fn(name, args, block) => {
-                exports.insert(name.to_string(), Value::Func(args.to_vec(), block.to_vec()));
+            Statement::Fn(name, args, ret_type, block) => {
+                exports.insert(
+                    name.to_string(),
+                    Value::Func(args.to_vec(), ret_type.clone(), block.to_vec()),
+                );
             }
             Statement::Module(name2, statements2) => {
                 let exports2 = eval_module(&mut inner_scope, prototypes, name2, statements2)?;

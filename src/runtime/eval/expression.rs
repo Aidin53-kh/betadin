@@ -28,7 +28,7 @@ pub fn eval_expression(
         Expr::BinaryOp(lhs, op, rhs) => eval_binary_expr(scopes, prototypes, lhs, op, rhs),
         Expr::UnaryOp(op, expr) => eval_unary_expr(scopes, prototypes, op, expr),
         Expr::Object(props) => eval_object_expr(scopes, prototypes, props),
-        Expr::Fn(args, block) => eval_fn_expr(args, block),
+        Expr::Fn(args, ret_type, block) => eval_fn_expr(args, ret_type, block),
         Expr::ModuleCall(paths, expr) => eval_module_call_expr(scopes, prototypes, paths, expr),
         Expr::Module(statements) => eval_module_expr(scopes, prototypes, statements),
         Expr::If(branchs, else_block) => eval_if_expr(scopes, prototypes, branchs, else_block),
@@ -93,7 +93,7 @@ pub fn eval_call_expr(
             let value = f(values)?;
             return Ok(value);
         }
-        Value::Func(params, block) => {
+        Value::Func(params, _, block) => {
             if params.len() != args.len() {
                 return Err(format!(
                     "expected {} arguments but found {}",
@@ -101,8 +101,6 @@ pub fn eval_call_expr(
                     args.len()
                 ));
             }
-            // x: int
-            // 3: int
 
             let mut inner_scope = scopes.new_from_push(HashMap::new());
             for (i, param) in params.iter().enumerate() {
@@ -394,7 +392,7 @@ pub fn eval_unary_expr(
 
     match op {
         UnaryOpKind::Not => !value,
-        UnaryOpKind::Typeof => Ok(Value::String(String::from(Type::from(&value)))),
+        UnaryOpKind::Typeof => Ok(Value::String(Type::simple(&value))),
     }
 }
 
@@ -417,8 +415,12 @@ pub fn eval_object_expr(
     Ok(Value::Object(values))
 }
 
-pub fn eval_fn_expr(args: &Vec<Arg>, block: &Vec<Statement>) -> Result<Value, String> {
-    Ok(Value::Func(args.to_vec(), block.to_vec()))
+pub fn eval_fn_expr(
+    args: &Vec<Arg>,
+    ret_type: &Option<Type>,
+    block: &Vec<Statement>,
+) -> Result<Value, String> {
+    Ok(Value::Func(args.to_vec(), ret_type.clone(), block.to_vec()))
 }
 
 pub fn eval_module_call_expr(

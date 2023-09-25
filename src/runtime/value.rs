@@ -20,7 +20,7 @@ pub enum Value {
         fn(Vec<Value>, Value) -> Result<Value, String>,
         Option<Box<Value>>,
     ),
-    Func(Vec<Arg>, Block),
+    Func(Vec<Arg>, Option<Type>, Block),
     Module(BTreeMap<String, Value>),
     Tuple(Vec<Value>),
 }
@@ -98,7 +98,9 @@ impl From<&Value> for Value {
             Value::List(l) => Value::List(l.to_vec()),
             Value::BuiltInFn(f) => Value::BuiltInFn(*f),
             Value::BuiltInMethod(f, this) => Value::BuiltInMethod(*f, this.clone()),
-            Value::Func(args, block) => Value::Func(args.to_vec(), block.to_vec()),
+            Value::Func(args, ret_type, block) => {
+                Value::Func(args.to_vec(), ret_type.clone(), block.to_vec())
+            }
             Value::Object(props) => Value::Object(props.to_vec()),
             Value::Module(items) => Value::Module(items.to_owned()),
             Value::Tuple(t) => Value::Tuple(t.to_vec()),
@@ -117,7 +119,7 @@ impl Display for Value {
             Value::BuiltInFn(_) => write!(f, "function"),
             Value::List(v) => write!(f, "[{}]", value_list(v.to_vec())),
             Value::BuiltInMethod(_, _) => write!(f, "function"),
-            Value::Func(_, _) => write!(f, "function"),
+            Value::Func(..) => write!(f, "function"),
             Value::Object(obj) => write!(f, "{{\n{}}}", key_value(obj.to_vec())),
             Value::Module(_) => write!(f, "module"),
             Value::Tuple(t) => write!(f, "({})", value_list(t.to_vec())),
@@ -137,7 +139,7 @@ impl From<Type> for Value {
                 BuiltinType::String => Value::String(String::default()),
                 BuiltinType::List(_) => Value::List(vec![]),
                 BuiltinType::Tuple(_) => Value::Tuple(vec![]),
-                BuiltinType::Fn(_, _) => Value::Func(vec![], vec![]),
+                BuiltinType::Fn(_, ret_type) => Value::Func(vec![], Some(*ret_type), vec![]),
             },
         }
     }
