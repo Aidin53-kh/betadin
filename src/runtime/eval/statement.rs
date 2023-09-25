@@ -105,24 +105,41 @@ pub fn eval_statement(
 
             match ret {
                 Escape::Return(val) => {
-                    scopes.declare(
-                        name,
-                        Value::Func(args.to_vec(), Some(Type::from(&val)), block.to_vec()),
-                        &Some(Type::from(&Value::Func(
-                            args.clone(),
-                            ret_type.clone(),
-                            block.clone(),
-                        ))),
-                        DeclType::Immutable,
-                    )?;
+                    if let Some(ret_type) = ret_type {
+                        scopes.declare(
+                            name,
+                            Value::Func(args.to_vec(), Some(Type::from(&val)), block.to_vec()),
+                            &Some(Type::from(&Value::Func(
+                                args.clone(),
+                                Some(ret_type.clone()),
+                                block.clone(),
+                            ))),
+                            DeclType::Immutable,
+                        )?;
+                    } else {
+                        scopes.declare(
+                            name,
+                            Value::Func(args.to_vec(), Some(Type::from(&val)), block.to_vec()),
+                            &Some(Type::from(&Value::Func(
+                                args.clone(),
+                                Some(Type::Builtin(BuiltinType::Null)),
+                                block.clone(),
+                            ))),
+                            DeclType::Immutable,
+                        )?;
+                    }
                 }
                 _ => {
                     scopes.declare(
                         name,
-                        Value::Func(args.to_vec(), ret_type.clone(), block.to_vec()),
+                        Value::Func(
+                            args.to_vec(),
+                            Some(Type::Builtin(BuiltinType::Null)),
+                            block.to_vec(),
+                        ),
                         &Some(Type::from(&Value::Func(
                             args.clone(),
-                            Some(Type::Builtin(BuiltinType::Null)),
+                            ret_type.clone(),
                             block.clone(),
                         ))),
                         DeclType::Immutable,
