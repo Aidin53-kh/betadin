@@ -2,6 +2,7 @@ use ::std::collections::HashMap;
 use ::std::fmt;
 use ::std::sync::{Arc, Mutex};
 
+use self::eval::statement::{eval_statements, Escape};
 use self::prototypes::object::object_proto;
 use self::value::{check_list_items, BuiltinType, Value};
 
@@ -92,10 +93,43 @@ impl From<&Value> for Type {
 
                 Type::Builtin(BuiltinType::Tuple(types))
             }
+            Value::Func(args, block) => {
+                let mut scopes = ScopeStack::new(vec![Arc::new(Mutex::new(StdLib::exports()))]);
+                let mut args_types = Vec::new();
+
+                for arg in args {
+                    args_types.push(arg.datatype.clone());
+                    scopes
+                        .declare(
+                            &arg.ident,
+                            Value::from(arg.datatype.clone()),
+                            &Some(arg.datatype.clone()),
+                            DeclType::Mutable,
+                        )
+                        .unwrap();
+                }
+
+                let ret = eval_statements(&mut scopes, block, &Prototypes::exports()).unwrap();
+
+                match ret {
+                    Escape::Return(value) => {
+                        return Type::Builtin(BuiltinType::Fn(
+                            args_types,
+                            Box::new(Type::from(&value)),
+                        ))
+                    }
+
+                    _ => {
+                        return Type::Builtin(BuiltinType::Fn(
+                            args_types,
+                            Box::new(Type::Builtin(BuiltinType::Null)),
+                        ))
+                    }
+                }
+            }
             Value::Object(_) => Type::Custom("object".to_string()),
-            Value::BuiltInFn(_) => Type::Custom("function".to_string()),
-            Value::BuiltInMethod(_, _) => Type::Custom("function".to_string()),
-            Value::Func(_, _) => Type::Custom("function".to_string()),
+            Value::BuiltInFn(_) => Type::Custom("functionff".to_string()),
+            Value::BuiltInMethod(_, _) => Type::Custom("functionff".to_string()),
             Value::Module(_) => Type::Custom("module".to_string()),
         }
     }

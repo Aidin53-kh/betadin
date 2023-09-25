@@ -1,6 +1,5 @@
-let h = "hello"; # infered as string
 
-let t: (string, int) = (h, 3);
-let x: string[] = h.chars();
+let x: fn() -> (int, string)[] = fn() {
+    return [(2, "test")];
+};
 
-println((h, 3) + 3);

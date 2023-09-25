@@ -49,13 +49,26 @@ optional_datatype: Option<Type> = {
 }
 
 datatype: Type = {
+    "fn" "(" <args:datatype_list> ")" "->" <ret_type:datatype> => Type::Builtin(BuiltinType::Fn(args, Box::new(ret_type))),
+    datatype_2
+}
+
+datatype_2: Type = {
+    "(" <t:datatype> ")" => t,
+    datatype_3
+}
+
+datatype_3: Type = {
     "string" => Type::Builtin(BuiltinType::String),
     "int" => Type::Builtin(BuiltinType::Int),
     "float" => Type::Builtin(BuiltinType::Float),
     "bool" => Type::Builtin(BuiltinType::Bool),
     "null" => Type::Builtin(BuiltinType::Null),
-    <datatype> "[]" => Type::Builtin(BuiltinType::List(Box::new(<>))),
-    "(" <t:datatype_list> ")" => Type::Builtin(BuiltinType::Tuple(t))
+    <datatype_2> "[]" => Type::Builtin(BuiltinType::List(Box::new(<>))),
+    "(" <t:datatype_list> "," <t1:datatype> ")" => Type::Builtin(BuiltinType::Tuple(append(t, t1)))
+}
+
+datatype_4: Type = {
 }
 
 datatype_list: Vec<Type> = {
@@ -246,7 +259,15 @@ match {
     "int",
     "float",
     "bool",
-    "[]"
+    "[]",
+    "->",
+    "type",
+    "struct",
+    "trait",
+    "enum",
+    "match",
+    "impl",
+    "export"
 } else {
     " " => {},
     "\n" => {},

@@ -84,6 +84,7 @@ pub enum BuiltinType {
     String,
     List(Box<Type>),
     Tuple(Vec<Type>),
+    Fn(Vec<Type>, Box<Type>),
 }
 
 impl From<&Value> for Value {
@@ -113,13 +114,31 @@ impl Display for Value {
             Value::Float(n) => write!(f, "{}", n),
             Value::String(s) => write!(f, "{}", s),
             Value::Bool(b) => write!(f, "{}", b),
-            Value::BuiltInFn(_) => write!(f, "fn"),
+            Value::BuiltInFn(_) => write!(f, "function"),
             Value::List(v) => write!(f, "[{}]", value_list(v.to_vec())),
-            Value::BuiltInMethod(_, _) => write!(f, "fn"),
-            Value::Func(_, _) => write!(f, "fn"),
+            Value::BuiltInMethod(_, _) => write!(f, "function"),
+            Value::Func(_, _) => write!(f, "function"),
             Value::Object(obj) => write!(f, "{{\n{}}}", key_value(obj.to_vec())),
             Value::Module(_) => write!(f, "module"),
             Value::Tuple(t) => write!(f, "({})", value_list(t.to_vec())),
+        }
+    }
+}
+
+impl From<Type> for Value {
+    fn from(value: Type) -> Self {
+        match value {
+            Type::Custom(_) => todo!(),
+            Type::Builtin(t) => match t {
+                BuiltinType::Null => Value::Null,
+                BuiltinType::Int => Value::Int(i32::default()),
+                BuiltinType::Float => Value::Float(f32::default()),
+                BuiltinType::Bool => Value::Bool(bool::default()),
+                BuiltinType::String => Value::String(String::default()),
+                BuiltinType::List(_) => Value::List(vec![]),
+                BuiltinType::Tuple(_) => Value::Tuple(vec![]),
+                BuiltinType::Fn(_, _) => Value::Func(vec![], vec![]),
+            },
         }
     }
 }
@@ -148,6 +167,19 @@ impl Display for BuiltinType {
                 }
 
                 return write!(f, "({})", res);
+            }
+            BuiltinType::Fn(args, ret_type) => {
+                let mut args_types = String::new();
+                let ret_type = *ret_type.clone();
+
+                for (i, arg) in args.iter().enumerate() {
+                    if i >= 1 {
+                        args_types.push_str(", ");
+                    }
+                    args_types.push_str(&String::from(arg.clone()));
+                }
+
+                return write!(f, "fn({}) -> {}", args_types, ret_type.to_string());
             }
         }
     }
