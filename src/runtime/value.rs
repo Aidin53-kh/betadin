@@ -23,6 +23,7 @@ pub enum Value {
     Func(Vec<Arg>, Option<Type>, Block),
     Module(BTreeMap<String, Value>),
     Tuple(Vec<Value>),
+    Type(String, Type),
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -104,6 +105,7 @@ impl From<&Value> for Value {
             Value::Object(props) => Value::Object(props.to_vec()),
             Value::Module(items) => Value::Module(items.to_owned()),
             Value::Tuple(t) => Value::Tuple(t.to_vec()),
+            Value::Type(n, t) => Value::Type(n.clone(), t.clone()),
         }
     }
 }
@@ -118,11 +120,12 @@ impl Display for Value {
             Value::Bool(b) => write!(f, "{}", b),
             Value::BuiltInFn(_) => write!(f, "function"),
             Value::List(v) => write!(f, "[{}]", value_list(v.to_vec())),
-            Value::BuiltInMethod(_, _) => write!(f, "function"),
+            Value::BuiltInMethod(..) => write!(f, "function"),
             Value::Func(..) => write!(f, "function"),
             Value::Object(obj) => write!(f, "{{\n{}}}", key_value(obj.to_vec())),
             Value::Module(_) => write!(f, "module"),
             Value::Tuple(t) => write!(f, "({})", value_list(t.to_vec())),
+            Value::Type(..) => write!(f, "type"),
         }
     }
 }
@@ -130,7 +133,7 @@ impl Display for Value {
 impl From<Type> for Value {
     fn from(value: Type) -> Self {
         match value {
-            Type::Custom(_) => todo!(),
+            Type::Alias(_) => todo!(),
             Type::Builtin(t) => match t {
                 BuiltinType::Null => Value::Null,
                 BuiltinType::Int => Value::Int(i32::default()),

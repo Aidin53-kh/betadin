@@ -24,6 +24,7 @@ pub enum Statement {
     Module(String, Block),
     For(String, Expr, Block),
     While(Expr, Block),
+    Type(String, Type),
     Break,
     Continue,
 }

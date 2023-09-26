@@ -1,6 +1,8 @@
+use std::fmt::Display;
 use std::sync::{Arc, Mutex};
 use std::{env, fs};
 
+use ast::Program;
 use lalrpop_util::ParseError;
 use runtime::eval::eval_program;
 use runtime::Prototypes;

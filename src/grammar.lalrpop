@@ -11,18 +11,19 @@ pub program: Program = {
 
 statement: Statement = {
     <expr:expr> ";" => Statement::Expression(expr),
-    <name:identifier> "=" <rhs:expr> ";" => Statement::Assignment(name, rhs),
-    "let" <name:identifier> <t:optional_datatype> "=" <rhs:expr> ";" => Statement::Let(name, t, rhs),
-    "const" <name:identifier> <t:optional_datatype> "=" <rhs:expr> ";" => Statement::Const(name, t, rhs),
-    "fn" <name:identifier> "(" <args:input_args> ")" <ret_type:optional_return_type> <block:block> => Statement::Fn(name, args, ret_type, block),
+    <name:ident> "=" <rhs:expr> ";" => Statement::Assignment(name, rhs),
+    "let" <name:ident> <t:optional_datatype> "=" <rhs:expr> ";" => Statement::Let(name, t, rhs),
+    "const" <name:ident> <t:optional_datatype> "=" <rhs:expr> ";" => Statement::Const(name, t, rhs),
+    "fn" <name:ident> "(" <args:input_args> ")" <ret_type:optional_return_type> <block:block> => Statement::Fn(name, args, ret_type, block),
     "return" <expr:expr> ";" => Statement::Return(expr),
     "import" <args:import_args> ";" => Statement::Import(args, None),
     "import" <args:import_args> "::" "{" <names:params> "}" ";" => Statement::Import(args, Some(names)),
-    "for" <lhs:identifier> "in" <iter:expr> <block:block> => Statement::For(lhs, iter, block),
+    "for" <lhs:ident> "in" <iter:expr> <block:block> => Statement::For(lhs, iter, block),
     "break" ";" => Statement::Break,
     "continue" ";" => Statement::Continue,
     "while" <cond:expr> <block:block> => Statement::While(cond, block),
-    "module" <name:identifier> <block:block> => Statement::Module(name, block),
+    "module" <name:ident> <block:block> => Statement::Module(name, block),
+    "type" <name:ident> "=" <t:datatype> ";" => Statement::Type(name, t),
     if_statement,
 }
 
@@ -39,8 +40,8 @@ if_expr: Expr = {
 }
 
 import_args: Vec<String> = {
-    <args:import_args> "::" <name:identifier> => append(args, name),
-    <name:identifier> => vec![name],
+    <args:import_args> "::" <name:ident> => append(args, name),
+    <name:ident> => vec![name],
 }
 
 optional_datatype: Option<Type> = {
@@ -70,7 +71,8 @@ datatype_3: Type = {
     "bool" => Type::Builtin(BuiltinType::Bool),
     "null" => Type::Builtin(BuiltinType::Null),
     <datatype_2> "[]" => Type::Builtin(BuiltinType::List(Box::new(<>))),
-    "(" <t:datatype_list> "," <t1:datatype> ")" => Type::Builtin(BuiltinType::Tuple(append(t, t1)))
+    "(" <t:datatype_list> "," <t1:datatype> ")" => Type::Builtin(BuiltinType::Tuple(append(t, t1))),
+    <name:ident> => Type::Alias(name)
 }
 
 datatype_4: Type = {
@@ -146,7 +148,7 @@ expr_7: Expr = {
     <s:string> => Expr::String(s),
     <b:bool> => Expr::Bool(b),
     <l:list> => Expr::List(l),
-    <name:identifier> => Expr::Identifier(name),
+    <name:ident> => Expr::Identifier(name),
     "(" <expr:expr> ")" => expr
 }
 
@@ -157,7 +159,7 @@ props: Vec<Prop> = {
 }
 
 prop: Prop = {
-    <key:identifier> ":" <value:expr> => Prop { key, value }
+    <key:ident> ":" <value:expr> => Prop { key, value }
 }
 
 args: Vec<Expr> = {
@@ -168,8 +170,8 @@ args: Vec<Expr> = {
 
 params: Vec<String> = {
     () => vec![],
-    <params:params> "," <param:identifier> => append(params, param),
-    <param:identifier> => vec![param]
+    <params:params> "," <param:ident> => append(params, param),
+    <param:ident> => vec![param]
 }
 
 input_args: Vec<Arg> = {
@@ -179,7 +181,7 @@ input_args: Vec<Arg> = {
 }
 
 arg: Arg = {
-    <ident:identifier> ":" <t:datatype> => Arg { ident, datatype: t }
+    <ident:ident> ":" <t:datatype> => Arg { ident, datatype: t }
 }
 
 block: Block = {
@@ -207,7 +209,7 @@ bool: bool = {
     "false" => false
 }
 
-identifier: String = {
+ident: String = {
     <s:r"[a-zA-Z_][a-zA-Z_0-9]*"> => s.to_owned()
 }
 

@@ -20,24 +20,24 @@ impl StdLib {
         lib.declare(
             "std",
             Value::Module(Std::exports()),
-            Type::Custom("module".to_string()),
+            Type::Alias("module".to_string()),
         );
 
         // builtin functions
         lib.declare(
             "print",
             Value::BuiltInFn(ak_lib::print),
-            Type::Custom("function".to_string()),
+            Type::Alias("function".to_string()),
         );
         lib.declare(
             "println",
             Value::BuiltInFn(ak_lib::println),
-            Type::Custom("function".to_string()),
+            Type::Alias("function".to_string()),
         );
         lib.declare(
             "panic",
             Value::BuiltInFn(ak_lib::panic),
-            Type::Custom("function".to_string()),
+            Type::Alias("function".to_string()),
         );
 
         return lib.items();

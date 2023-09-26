@@ -2,6 +2,8 @@ use ::std::collections::HashMap;
 use ::std::fmt;
 use ::std::sync::{Arc, Mutex};
 
+use crate::ast::Block;
+
 use self::eval::statement::{eval_statements, Escape};
 use self::prototypes::object::object_proto;
 use self::value::{check_list_items, BuiltinType, Value};
@@ -31,7 +33,7 @@ pub trait Simple {
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Hash)]
 pub enum Type {
-    Custom(String),
+    Alias(String),
     Builtin(BuiltinType),
 }
 
@@ -50,6 +52,7 @@ impl Simple for Type {
             Value::Func(..) => "function".to_string(),
             Value::Module(_) => "module".to_string(),
             Value::Tuple(_) => "tuple".to_string(),
+            Value::Type(_, _) => "type".to_string(),
         }
     }
 }
@@ -70,7 +73,7 @@ impl From<String> for Type {
                 vec![],
                 Box::new(Type::Builtin(BuiltinType::Null)),
             )),
-            other => Type::Custom(other.to_string()),
+            other => Type::Alias(other.to_string()),
         }
     }
 }
@@ -136,10 +139,11 @@ impl From<&Value> for Type {
                     }
                 }
             }
-            Value::Object(_) => Type::Custom("object".to_string()),
-            Value::BuiltInFn(_) => Type::Custom("functionff".to_string()),
-            Value::BuiltInMethod(_, _) => Type::Custom("functionff".to_string()),
-            Value::Module(_) => Type::Custom("module".to_string()),
+            Value::Type(_, t) => t.clone(),
+            Value::Object(_) => Type::Alias("object".to_string()),
+            Value::BuiltInFn(_) => Type::Alias("function".to_string()),
+            Value::BuiltInMethod(_, _) => Type::Alias("function".to_string()),
+            Value::Module(_) => Type::Alias("module".to_string()),
         }
     }
 }
@@ -147,7 +151,7 @@ impl From<&Value> for Type {
 impl From<Type> for String {
     fn from(value: Type) -> Self {
         match value {
-            Type::Custom(t) => t,
+            Type::Alias(t) => t,
             Type::Builtin(t) => t.to_string(),
         }
     }
@@ -157,7 +161,7 @@ impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Type::Builtin(t) => write!(f, "{}", t.to_string()),
-            Type::Custom(t) => write!(f, "{}", t),
+            Type::Alias(t) => write!(f, "{}", t),
         }
     }
 }
@@ -225,16 +229,48 @@ impl ScopeStack {
         }
 
         // type checking
-        if let Some(t) = datatype {
-            if Type::from(&value) != *t {
-                return Err(format!(
-                    "expected `{}`, found `{}` (1)",
-                    t,
-                    Type::from(&value)
-                ));
+        if let Some(datatype) = datatype {
+            if let Type::Alias(type_name) = datatype {
+                std::mem::drop(current_scope);
+                match self.get(type_name) {
+                    Some(val) => match val {
+                        Value::Type(_, t) => {
+                            if Type::from(&value) != t {
+                                return Err(format!(
+                                    "expected `{}`, found `{}` (2)",
+                                    type_name,
+                                    Type::from(&value),
+                                ));
+                            }
+                            let mut current_scope = self
+                                .0
+                                .last()
+                                .expect("`ScopeStack` stack shouldn't be empty")
+                                .lock()
+                                .unwrap();
+
+                            current_scope
+                                .insert(name.to_string(), (value, decl_type, datatype.clone()));
+                        }
+                        _ => return Err(format!("expected `type`, but `{}` is a `value`", name)),
+                    },
+                    None => return Err(format!("type `{}` is not defined (9)", type_name)),
+                }
+            } else {
+                if Type::from(&value) != *datatype {
+                    return Err(format!(
+                        "expected `{}`, found `{}` (1)",
+                        datatype,
+                        Type::from(&value)
+                    ));
+                }
+                current_scope.insert(name.to_string(), (value, decl_type, datatype.clone()));
             }
-            current_scope.insert(name.to_string(), (value, decl_type, t.clone()));
         } else {
+            if let Value::Func(arg, ret_type, block) = &value {
+                let mut x = self.clone();
+                let ret = eval_statements(&mut x, block, &Prototypes::exports())?;
+            }
             current_scope.insert(
                 name.to_string(),
                 (value.clone(), decl_type, Type::from(&value)),
@@ -275,7 +311,6 @@ impl ScopeStack {
                 return Some(v.0.clone());
             }
         }
-
         None
     }
 }

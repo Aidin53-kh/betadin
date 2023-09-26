@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use crate::ast::Statement;
 use crate::runtime::value::{BuiltinType, Value};
-use crate::runtime::{DeclType, ScopeStack, Type};
+use crate::runtime::{DeclType, ScopeStack, Simple, Type};
 
 use super::expression::{eval_expression, get_module};
 
@@ -52,7 +52,7 @@ pub fn eval_statement(
                         scopes.declare(
                             m,
                             Value::Module(module),
-                            &Some(Type::Custom("todo".to_string())),
+                            &Some(Type::Alias("todo".to_string())),
                             DeclType::Immutable,
                         )?;
                     }
@@ -106,6 +106,7 @@ pub fn eval_statement(
             match ret {
                 Escape::Return(val) => {
                     if let Some(ret_type) = ret_type {
+                        println!("{:?}", ret_type);
                         scopes.declare(
                             name,
                             Value::Func(args.to_vec(), Some(Type::from(&val)), block.to_vec()),
@@ -150,17 +151,25 @@ pub fn eval_statement(
         Statement::For(lhs, iter, block) => {
             let iter_val = eval_expression(scopes, iter, prototypes)?;
 
-            match iter_val {
+            match &iter_val {
                 Value::List(values) | Value::Tuple(values) => {
-                    for value in values {
+                    for (i, value) in values.iter().enumerate() {
                         let mut inner_scopes = scopes.new_from_push(HashMap::new());
 
                         inner_scopes.declare(
                             lhs,
-                            value,
-                            &Some(Type::Custom("todo".to_string())),
+                            value.clone(),
+                            &Some(Type::from(value)),
                             DeclType::Mutable,
                         )?;
+
+                        inner_scopes.declare(
+                            &"index".to_string(),
+                            Value::Int(i as i32),
+                            &Some(Type::Builtin(BuiltinType::Int)),
+                            DeclType::Immutable,
+                        )?;
+
                         let ret = eval_statements(&mut inner_scopes, block, prototypes)?;
 
                         match ret {
@@ -171,7 +180,12 @@ pub fn eval_statement(
                         }
                     }
                 }
-                _ => return Err(format!("iterator most be a list")),
+                _ => {
+                    return Err(format!(
+                        "iterator most be a list, found {}",
+                        Type::simple(&iter_val)
+                    ))
+                }
             }
         }
         Statement::Break => return Ok(Escape::Break),
@@ -203,7 +217,15 @@ pub fn eval_statement(
             scopes.declare(
                 name,
                 Value::Module(module),
-                &Some(Type::Custom("module".to_string())),
+                &Some(Type::Alias("todo".to_string())),
+                DeclType::Immutable,
+            )?;
+        }
+        Statement::Type(name, datatype) => {
+            scopes.declare(
+                name,
+                Value::Type(name.clone(), datatype.clone()),
+                &Some(datatype.clone()),
                 DeclType::Immutable,
             )?;
         }
@@ -318,7 +340,7 @@ pub fn eval_module(
     inner_scope.declare(
         name,
         Value::Module(exports.clone()),
-        &Some(Type::Custom("module".to_string())),
+        &Some(Type::Alias("module".to_string())),
         DeclType::Immutable,
     )?;
     Ok(exports)
