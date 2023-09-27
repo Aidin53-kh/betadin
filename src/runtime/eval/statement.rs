@@ -25,11 +25,21 @@ pub fn eval_statement(
         }
         Statement::Let(name, datatype, rhs) => {
             let value = eval_expression(scopes, rhs, prototypes)?;
-            scopes.declare(name, value, datatype, DeclType::Mutable)?;
+
+            if let Some(datatype) = datatype {
+                scopes.declare_variable(name, datatype, &value, DeclType::Mutable)?;
+            } else {
+                scopes.declare_variable(name, &Type::from(&value), &value, DeclType::Mutable)?;
+            }
         }
         Statement::Const(name, datatype, rhs) => {
             let value = eval_expression(scopes, rhs, prototypes)?;
-            scopes.declare(name, value, datatype, DeclType::Immutable)?;
+
+            if let Some(datatype) = datatype {
+                scopes.declare_variable(name, datatype, &value, DeclType::Immutable)?;
+            } else {
+                scopes.declare_variable(name, &Type::from(&value), &value, DeclType::Immutable)?;
+            }
         }
         Statement::Import(args, items) => {
             let module = get_module(scopes, args)?;
@@ -88,64 +98,15 @@ pub fn eval_statement(
             return Ok(Escape::Return(value));
         }
         Statement::Fn(name, args, ret_type, block) => {
-            let mut inner_scopes = scopes.new_from_push(HashMap::new());
-
-            for arg in args {
-                inner_scopes
-                    .declare(
-                        &arg.ident,
-                        Value::from(arg.datatype.clone()),
-                        &Some(arg.datatype.clone()),
-                        DeclType::Mutable,
-                    )
-                    .unwrap();
-            }
-
-            let ret = eval_statements(&mut inner_scopes, block, prototypes)?;
-
-            match ret {
-                Escape::Return(val) => {
-                    if let Some(ret_type) = ret_type {
-                        println!("{:?}", ret_type);
-                        scopes.declare(
-                            name,
-                            Value::Func(args.to_vec(), Some(Type::from(&val)), block.to_vec()),
-                            &Some(Type::from(&Value::Func(
-                                args.clone(),
-                                Some(ret_type.clone()),
-                                block.clone(),
-                            ))),
-                            DeclType::Immutable,
-                        )?;
-                    } else {
-                        scopes.declare(
-                            name,
-                            Value::Func(args.to_vec(), Some(Type::from(&val)), block.to_vec()),
-                            &Some(Type::from(&Value::Func(
-                                args.clone(),
-                                Some(Type::Builtin(BuiltinType::Null)),
-                                block.clone(),
-                            ))),
-                            DeclType::Immutable,
-                        )?;
-                    }
-                }
-                _ => {
-                    scopes.declare(
-                        name,
-                        Value::Func(
-                            args.to_vec(),
-                            Some(Type::Builtin(BuiltinType::Null)),
-                            block.to_vec(),
-                        ),
-                        &Some(Type::from(&Value::Func(
-                            args.clone(),
-                            ret_type.clone(),
-                            block.clone(),
-                        ))),
-                        DeclType::Immutable,
-                    )?;
-                }
+            if let Some(ret_type) = ret_type {
+                scopes.declare_fn_statement(name, args, ret_type, block)?;
+            } else {
+                scopes.declare_fn_statement(
+                    name,
+                    args,
+                    &Type::Builtin(BuiltinType::Null),
+                    block,
+                )?;
             }
         }
         Statement::For(lhs, iter, block) => {
@@ -222,12 +183,7 @@ pub fn eval_statement(
             )?;
         }
         Statement::Type(name, datatype) => {
-            scopes.declare(
-                name,
-                Value::Type(name.clone(), datatype.clone()),
-                &Some(datatype.clone()),
-                DeclType::Immutable,
-            )?;
+            scopes.declare_type_alias(name, datatype)?;
         }
     };
 

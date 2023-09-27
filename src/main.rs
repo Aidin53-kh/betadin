@@ -1,8 +1,6 @@
-use std::fmt::Display;
 use std::sync::{Arc, Mutex};
 use std::{env, fs};
 
-use ast::Program;
 use lalrpop_util::ParseError;
 use runtime::eval::eval_program;
 use runtime::Prototypes;
@@ -25,6 +23,7 @@ fn main() -> Result<(), String> {
         Some(path) => {
             let mut scopes = ScopeStack::new(vec![Arc::new(Mutex::new(StdLib::exports()))]);
 
+            
             let code = fs::read_to_string(path).expect("unable to read the file");
             let parser = grammar::programParser::new();
             let ast = parser.parse(&code).map_err(|e| match e {

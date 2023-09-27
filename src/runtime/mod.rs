@@ -1,8 +1,9 @@
 use ::std::collections::HashMap;
 use ::std::fmt;
+
 use ::std::sync::{Arc, Mutex};
 
-use crate::ast::Block;
+use crate::ast::{Arg, Statement};
 
 use self::eval::statement::{eval_statements, Escape};
 use self::prototypes::object::object_proto;
@@ -213,14 +214,14 @@ impl ScopeStack {
 
             if let Some(kv) = res {
                 return Err(format!(
-                    "property '{}' is reserved in object prototype",
+                    "property `{}` is reserved in object prototype",
                     kv.key
                 ));
             }
         }
 
         if current_scope.contains_key(name) {
-            return Err(format!("'{}' already define in this scope", name));
+            return Err(format!("`{}` already define in this scope", name));
         }
 
         // all list items most be have same type
@@ -228,17 +229,42 @@ impl ScopeStack {
             check_list_items(list)?;
         }
 
+        if let Value::Func(arg, ret_type, block) = &value {
+            let mut x = self.clone();
+            let ret = eval_statements(&mut x, block, &Prototypes::exports())?;
+            if let Some(ret_t) = ret_type {
+                if let Escape::Return(val) = ret {
+                    if &Type::from(&val) != ret_t {
+                        return Err(format!(
+                            "extected `{}` found `{}` (15)",
+                            Type::from(&Value::Func(
+                                arg.to_vec(),
+                                Some(ret_t.clone()),
+                                block.clone()
+                            )),
+                            Type::from(&Value::Func(
+                                arg.to_vec(),
+                                Some(Type::from(&val)),
+                                block.clone()
+                            )),
+                        ));
+                    }
+                }
+            }
+        }
+
         // type checking
         if let Some(datatype) = datatype {
             if let Type::Alias(type_name) = datatype {
                 std::mem::drop(current_scope);
                 match self.get(type_name) {
-                    Some(val) => match val {
-                        Value::Type(_, t) => {
-                            if Type::from(&value) != t {
+                    Some(val) => match &val {
+                        Value::Type(_, _) => {
+                            if Type::from(&value) != self.get_type_alias(datatype)? {
                                 return Err(format!(
-                                    "expected `{}`, found `{}` (2)",
+                                    "expected `{}: ({})`, found `{}` (2)",
                                     type_name,
+                                    self.get_type_alias(datatype)?,
                                     Type::from(&value),
                                 ));
                             }
@@ -257,20 +283,18 @@ impl ScopeStack {
                     None => return Err(format!("type `{}` is not defined (9)", type_name)),
                 }
             } else {
-                if Type::from(&value) != *datatype {
+                if Type::from(&value) != self.get_type_alias(datatype)? {
                     return Err(format!(
-                        "expected `{}`, found `{}` (1)",
+                        "expected `{} ({})`, found `{}` (1)",
                         datatype,
+                        self.get_type_alias(datatype)?,
                         Type::from(&value)
                     ));
                 }
+
                 current_scope.insert(name.to_string(), (value, decl_type, datatype.clone()));
             }
         } else {
-            if let Value::Func(arg, ret_type, block) = &value {
-                let mut x = self.clone();
-                let ret = eval_statements(&mut x, block, &Prototypes::exports())?;
-            }
             current_scope.insert(
                 name.to_string(),
                 (value.clone(), decl_type, Type::from(&value)),
@@ -312,5 +336,280 @@ impl ScopeStack {
             }
         }
         None
+    }
+
+    fn declare_fn_statement(
+        &mut self,
+        fn_name: &String,
+        args: &Vec<Arg>,
+        ret_type: &Type,
+        block: &Vec<Statement>,
+    ) -> Result<(), String> {
+        let expected_ret_type = self.get_type_alias(ret_type)?;
+
+        let current_scope = self
+            .0
+            .last()
+            .expect("`ScopeStack` stack shouldn't be empty")
+            .lock()
+            .unwrap();
+
+        if current_scope.contains_key(fn_name) {
+            return Err(format!("'{}' already define in this scope", fn_name));
+        }
+
+        let mut inner_scope = self.new_from_push(HashMap::new());
+
+        for arg in args {
+            inner_scope.declare_variable(
+                &arg.ident,
+                &arg.datatype,
+                &Value::from(arg.datatype.clone()),
+                DeclType::Mutable,
+            )?;
+        }
+
+        let ret = eval_statements(&mut inner_scope, block, &Prototypes::exports())?;
+
+        if let Escape::Return(ret_value) = ret {
+            if expected_ret_type != Type::from(&ret_value) {
+                return Err(format!(
+                    "expected `{}` found `{}` (13)",
+                    expected_ret_type,
+                    Type::from(&ret_value)
+                ));
+            }
+        } else {
+            if expected_ret_type != Type::Builtin(BuiltinType::Null) {
+                return Err(format!(
+                    "expected `{}` found `{}` (14)",
+                    expected_ret_type,
+                    Type::Builtin(BuiltinType::Null)
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
+    fn declare_variable(
+        &mut self,
+        name: &String,
+        datatype: &Type,
+        value: &Value,
+        decl_type: DeclType,
+    ) -> Result<(), String> {
+        let extected_type = self.get_type_alias(datatype)?;
+        let value_type = self.get_type_alias(&Type::from(value))?;
+
+        if let Value::Func(args, ret_type, block) = &value {
+            if &extected_type != &value_type {
+                return Err(format!(
+                    "expected `{}` found `{}` (16)",
+                    extected_type, value_type
+                ));
+            }
+
+            if let Some(ret_type) = ret_type {
+                let value_type = Type::from(&Value::Func(
+                    args.clone(),
+                    Some(self.get_type_alias(ret_type)?),
+                    block.clone(),
+                ));
+
+                let current_scope = self
+                    .0
+                    .last()
+                    .expect("`ScopeStack` stack shouldn't be empty")
+                    .lock()
+                    .unwrap();
+
+                if current_scope.contains_key(name) {
+                    return Err(format!("'{}' already define in this scope", name));
+                }
+
+                let mut inner_scope = self.new_from_push(HashMap::new());
+
+                for arg in args {
+                    inner_scope.declare_variable(
+                        &arg.ident,
+                        &arg.datatype,
+                        &Value::from(arg.datatype.clone()),
+                        DeclType::Mutable,
+                    )?;
+                }
+
+                let ret = eval_statements(&mut inner_scope, block, &Prototypes::exports())?;
+
+                if let Escape::Return(ret_value) = ret {
+                    let ret_type = Type::from(&Value::Func(
+                        args.clone(),
+                        Some(Type::from(&ret_value)),
+                        block.clone(),
+                    ));
+                    if ret_type != value_type {
+                        return Err(format!(
+                            "expected `{}` found `{}` (13)",
+                            value_type, ret_type
+                        ));
+                    }
+                } else {
+                    let ret_type = Type::from(&Value::Func(
+                        args.clone(),
+                        Some(Type::Builtin(BuiltinType::Null)),
+                        block.clone(),
+                    ));
+                    if value_type != ret_type {
+                        return Err(format!(
+                            "expected `{}` found `{}` (14)",
+                            value_type, ret_type
+                        ));
+                    }
+                }
+            }
+        } else {
+            let mut current_scope = self
+                .0
+                .last()
+                .expect("`ScopeStack` stack shouldn't be empty")
+                .lock()
+                .unwrap();
+
+            if current_scope.contains_key(name) {
+                return Err(format!("`{}` already define in this scope", name));
+            }
+
+            if &extected_type != &value_type {
+                return Err(format!(
+                    "expected `{}` found `{}`",
+                    extected_type, value_type
+                ));
+            }
+
+            current_scope.insert(name.to_string(), (value.clone(), decl_type, value_type));
+        }
+
+        Ok(())
+    }
+
+    fn declare_type_alias(&mut self, type_name: &String, datatype: &Type) -> Result<(), String> {
+        let mut current_scope = self
+            .0
+            .last()
+            .expect("`ScopeStack` stack shouldn't be empty")
+            .lock()
+            .unwrap();
+
+        if current_scope.contains_key(type_name) {
+            return Err(format!("'{}' already define in this scope", type_name));
+        }
+
+        current_scope.insert(
+            type_name.to_string(),
+            (
+                Value::Type(type_name.to_string(), datatype.clone()),
+                DeclType::Immutable,
+                datatype.clone(),
+            ),
+        );
+
+        Ok(())
+    }
+
+    fn get_type_alias(&self, datatype: &Type) -> Result<Type, String> {
+        match datatype {
+            Type::Builtin(bt) => match bt {
+                BuiltinType::Fn(a, rt) => match *rt.clone() {
+                    Type::Alias(t) => {
+                        return Ok(Type::Builtin(BuiltinType::Fn(
+                            a.clone(),
+                            Box::new(self.get_type_alias(&Type::Alias(t))?),
+                        )))
+                    }
+                    Type::Builtin(b) => {
+                        return Ok(Type::Builtin(BuiltinType::Fn(
+                            a.clone(),
+                            Box::new(self.get_type_alias(&Type::Builtin(b))?),
+                        )))
+                    }
+                },
+                BuiltinType::Tuple(items) => {
+                    let mut b_types = Vec::new();
+
+                    for item in items {
+                        match item {
+                            Type::Alias(type_name) => {
+                                b_types.push(
+                                    self.get_type_alias(&Type::Alias(type_name.to_string()))?,
+                                );
+                            }
+                            Type::Builtin(b) => {
+                                b_types.push(self.get_type_alias(&Type::Builtin(b.clone()))?);
+                            }
+                        }
+                    }
+
+                    Ok(Type::Builtin(BuiltinType::Tuple(b_types)))
+                }
+                BuiltinType::List(data_type) => {
+                    return Ok(Type::Builtin(BuiltinType::List(Box::new(
+                        self.get_type_alias(&*data_type.clone())?,
+                    ))))
+                }
+                s => return Ok(Type::Builtin(s.clone())),
+            },
+
+            Type::Alias(tn) => match self.get(tn) {
+                Some(t) => match &Type::from(&t) {
+                    Type::Alias(s) => {
+                        return self.get_type_alias(&Type::Alias(s.to_string()));
+                    }
+                    Type::Builtin(b) => match b {
+                        BuiltinType::Fn(a, rt) => match *rt.clone() {
+                            Type::Alias(t) => {
+                                return Ok(Type::Builtin(BuiltinType::Fn(
+                                    a.clone(),
+                                    Box::new(self.get_type_alias(&Type::Alias(t))?),
+                                )));
+                            }
+                            Type::Builtin(b) => {
+                                return Ok(Type::Builtin(BuiltinType::Fn(
+                                    a.clone(),
+                                    Box::new(self.get_type_alias(&Type::Builtin(b))?),
+                                )));
+                            }
+                        },
+                        BuiltinType::Tuple(items) => {
+                            let mut b_types = Vec::new();
+
+                            for item in items {
+                                match item {
+                                    Type::Alias(type_name) => {
+                                        b_types.push(
+                                            self.get_type_alias(&Type::Alias(
+                                                type_name.to_string(),
+                                            ))?,
+                                        );
+                                    }
+                                    Type::Builtin(b) => {
+                                        b_types
+                                            .push(self.get_type_alias(&Type::Builtin(b.clone()))?);
+                                    }
+                                }
+                            }
+
+                            Ok(Type::Builtin(BuiltinType::Tuple(b_types)))
+                        }
+                        BuiltinType::List(data_type) => {
+                            return Ok(Type::Builtin(BuiltinType::List(Box::new(
+                                self.get_type_alias(&*data_type.clone())?,
+                            ))))
+                        }
+                        f => return Ok(Type::Builtin(f.clone())),
+                    },
+                },
+                None => return Err(format!("type `{}` is not defined (10)", tn)),
+            },
+        }
     }
 }
