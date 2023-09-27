@@ -1,12 +1,12 @@
 [package]
 name = "betadin"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 authors = ["aidin53"]
 description = "A simple programing language for research purposes"
 repository = "https://github.com/Aidin53-kh/betadin"
-keywords = ["lang", "programing-language", "language"]
+keywords = ["parser", "intersepter", "lexer", "compiler", "language"]
 
 [dependencies]
 lalrpop-util = { version = "0.20.0", features = ["lexer"] }
